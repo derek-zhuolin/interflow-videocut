@@ -87,6 +87,11 @@ npx -y @notedit/vtake@latest transcribe "$WORK_DIR/audio.mp3" --out-dir "$WORK_D
 
 Output: `transcript.json` with `{ segments, words, raw }`.
 
+**Transcription is ElevenLabs-only — never a local model.** The `vtake transcribe`
+CLI only supports `--asr elevenlabs`; there is no local/whisper path to fall into.
+With no `ELEVEN_API_KEY` set it runs in proxy mode (zero model download, no key
+needed, runs out of the box) and only hits the rate limit below.
+
 **Rate limiting (proxy mode only — no `ELEVEN_API_KEY`):** the server allows
 3 requests per minute per IP. If you see an error starting with
 `rate_limited:` or `service_busy:`, do **not** auto-retry — stop and tell

@@ -49,7 +49,8 @@ input.mp4
 | `@notedit/vtake` (CLI) | extract / transcribe 引擎 | 首次自动 `npx` 下载 |
 | `hyperframes` (CLI) | HTML → MP4 渲染引擎 | 首次自动 `npx` 下载 |
 
-可选：设 `ELEVEN_API_KEY` 直连 ElevenLabs 转录（不设则走限流代理，每 IP 每分钟 3 次）。
+> **转录只走 ElevenLabs，永不下载本地语音模型。** 默认就是代理模式——不需要 API Key、零模型下载、开箱即跑（限流：每 IP 每分钟 3 次）。想绕过限流再设 `ELEVEN_API_KEY` 直连 ElevenLabs 即可。
+
 字体（Inter / Caveat / LXGW WenKai TC / Virgil）和 GSAP 已打包在 `assets/`，无需额外安装。
 
 ## 使用
