@@ -1,0 +1,146 @@
+<!doctype html>
+<!--
+  Interflow Video Cut — composition shell (copy-and-fill).
+  This is the STATIC skeleton that is identical for every video. Step 9 of
+  SKILL.md copies this file to $WORK_DIR/public/index.html and fills in:
+    1. The 6 {{...}} tokens at the top (theme + canvas + duration/fps).
+    2. The video-wrapper's initial bounds (match card-01's layout).
+    3. The per-card <div class="card-host clip"> blocks (INJECT marker #1).
+    4. The per-card GSAP lifecycle blocks (INJECT marker #2).
+  Do NOT regenerate this skeleton from scratch — only fill the marked slots.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+@font-face { font-family: 'Caveat'; src: url('fonts/Caveat-400-latin.woff2') format('woff2'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'Caveat'; src: url('fonts/Caveat-700-latin.woff2') format('woff2'); font-weight: 700; font-display: block; }
+@font-face { font-family: 'LXGW WenKai TC'; src: url('fonts/LXGWWenKaiTC-400-latin.woff2') format('woff2'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'Inter'; src: url('fonts/Inter-400-latin.woff2') format('woff2'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'Inter'; src: url('fonts/Inter-700-latin.woff2') format('woff2'); font-weight: 700; font-display: block; }
+@font-face { font-family: 'Virgil'; src: url('fonts/Virgil.woff2') format('woff2'); font-display: block; }
+
+:root {
+  /* Fill from the themeId palette table in Step 7. */
+  --bg: {{BG}};
+  --text: {{TEXT}};
+  --accent-0: {{ACCENT_0}};
+  --accent-1: {{ACCENT_1}};
+  --accent-2: {{ACCENT_2}};
+  --accent-3: {{ACCENT_3}};
+  --accent-4: {{ACCENT_4}};
+  --font-family: 'Caveat', 'LXGW WenKai TC', serif;
+}
+* { box-sizing: border-box; }
+/* Body font-family MUST list concrete font names (not just var(--font-family)) —
+   the HyperFrames renderer's static analyzer doesn't expand CSS variables when
+   resolving fonts, so a var-only chain triggers `font_family_without_font_face`
+   lint and falls back to a generic. */
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000;
+             font-family: 'Inter', 'Caveat', 'LXGW WenKai TC', ui-sans-serif, system-ui, sans-serif; }
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+/* video-wrapper holds the source video. Its position / size are animated
+   over time by the master timeline (one tween per layout transition). */
+.video-wrapper {
+  position: absolute;
+  /* INITIAL bounds — set to match card-01's layout (see Step 7 layout table). */
+  left: 0; top: 0; width: {{WIDTH}}px; height: {{HEIGHT}}px;
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: none;
+}
+.video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
+
+.card-host { position: absolute; pointer-events: none; overflow: hidden; }
+.card-host .card { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.card-host .char { display: inline-block; visibility: visible; }
+
+/* Subtle drop shadow + rounded corners for non-fullscreen video framings */
+.video-wrapper.framed {
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+}
+</style>
+</head>
+<body>
+<div
+  id="stage"
+  data-composition-id="interflow"
+  data-start="0"
+  data-duration="{{DURATION}}"
+  data-fps="{{FPS}}"
+  data-width="{{WIDTH}}"
+  data-height="{{HEIGHT}}"
+>
+  <!-- Layer 1: source video — initial position matches card-01's layout -->
+  <div class="video-wrapper" id="video-wrap">
+    <video id="bg-video"
+           src="input-video.mp4"
+           muted playsinline
+           data-start="0"
+           data-duration="{{DURATION}}"
+           data-track-index="1"></video>
+  </div>
+
+  <!-- Layer 2: per-card hosts. INJECT one card-host per card at the marker
+       below (scripts/build-timeline.py does this for you). Each host is a div
+       with BOTH "card-host" and "clip" classes; data-card-id = the card id;
+       data-start = the card's startSec (already the prev.endSec − SLIP overlap);
+       data-duration = endSec − startSec; data-track-index increases by 1 every
+       card (2, 3, 4, …) so overlapping slips layer right; inline style =
+       resolveZoneBounds(card.zone) + visibility:hidden;opacity:0; and the card's
+       HTML fragment goes inside. (No literal example here — a real-looking
+       card-host div inside this comment gets mis-parsed by the lint as a
+       duplicate clip.) -->
+  <!-- INJECT-CARD-HOSTS -->
+
+  <script src="vendor/gsap.min.js"></script>
+  <script>
+  (function(){
+    // count-up formatter helper
+    window.__fmt = function(v, fmt) {
+      if (typeof fmt === 'string' && /^\.[0-9]+f$/.test(fmt)) {
+        return Number(v).toFixed(Number(fmt.slice(1, -1)));
+      }
+      if (fmt === ',d') return Math.round(v).toLocaleString();
+      return String(Math.round(v));
+    };
+
+    const compDurationSec = {{DURATION}};
+    const tl = window.gsap.timeline({ paused: true });
+
+    // ── Card lifecycle: SLIP transition + ambient drift (the silky default) ──
+    // Each card slips in from below (blur→0, sink→0), drifts gently its whole
+    // life, then slips up+out — and the NEXT card's slip-in OVERLAPS this
+    // slip-out by ~0.55s so there is never a hard cut. Incoming card sits on a
+    // higher data-track-index so it covers the outgoing one during the overlap.
+    //   const SLIP = 0.55;  // overlap window (0.45–0.7)
+    //
+    // INJECT one lifecycle block per card below. The standard block (clone this
+    // per card, substituting the id, startSec, exitSec = endSec − SLIP, and the
+    // internal data-anim compilations) is:
+    //
+    //   tl.set('.card-host[data-card-id="<id>"]', { visibility: 'visible' }, <startSec>);
+    //   tl.fromTo('.card-host[data-card-id="<id>"]',
+    //     { opacity: 0, y: 120, filter: 'blur(16px)', scale: 0.94 },
+    //     { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1, duration: 0.7, ease: 'expo.out' }, <startSec>);
+    //   tl.to('.card[data-card-id="<id>"] .root',
+    //     { y: '+=10', duration: 11, ease: 'sine.inOut', repeat: Math.ceil(compDurationSec / 11), yoyo: true }, <startSec>);
+    //   /* ...internal data-anim statements (see GSAP Statement Cheat Sheet)... */
+    //   tl.to('.card-host[data-card-id="<id>"]',
+    //     { opacity: 0, y: -90, filter: 'blur(10px)', duration: 0.5, ease: 'power2.in' }, <exitSec>);
+    //   tl.set('.card-host[data-card-id="<id>"]', { visibility: 'hidden' }, <endSec>);
+    //   /* if the next card's layout differs, reframe #video-wrap at <exitSec>:
+    //      tl.set('#video-wrap', { className: 'video-wrapper framed' }, <exitSec>);
+    //      tl.to('#video-wrap', { left:.., top:.., width:.., height:.., duration:0.7, ease:'power3.inOut' }, <exitSec>); */
+    //
+    // INJECT-TIMELINE
+
+    window.__timelines = window.__timelines || {};
+    window.__timelines["interflow"] = tl;
+  })();
+  </script>
+</div>
+</body>
+</html>

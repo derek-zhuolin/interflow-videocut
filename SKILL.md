@@ -1,16 +1,23 @@
 ---
 name: interflow-video-cut
-description: Turn a local talking-head / 口播 video into metadata, transcript, and an AI-composed card-based video where the agent freely designs and writes HTML cards in conversation, then renders to MP4. Ships with the Interflow AI club sign-off ("Interflow AI 出品"). Use when the user asks for interflow-video-cut, 口播成片, talking-head repurposing, video takeaways, transcript cleanup, or turning a spoken video into a captioned card video.
+description: Turn a local talking-head / 口播 video into metadata, transcript, and an AI-composed card-based video where the agent composes cards by cloning styled templates and filling them (designing bespoke only when content needs it), then renders to MP4. Ships with the Interflow AI club sign-off ("Interflow AI 出品"). Use when the user asks for interflow-video-cut, 口播成片, talking-head repurposing, video takeaways, transcript cleanup, or turning a spoken video into a captioned card video.
 ---
 
 # Interflow Video Cut — 口播成片 Workflow
 
 Interflow Video Cut converts a local input video into a card-based composition. The agent
-designs the cards (timing + content) and **writes each card's HTML directly
-in the conversation**, then assembles a single composition HTML and renders
-it to MP4 via `hyperframes`. There is no fixed archetype list and no
-prescribed card structure — the cards emerge from what the transcript
-actually says.
+designs the cards (timing + content), then assembles a single composition HTML and renders
+it to MP4 via `hyperframes`.
+
+**Default authoring mode: clone-and-fill, not free-design.** For each card,
+**start from a shipped reference fragment** (`references/styles/<key>.html`) and
+**swap only the text + accent** — this is the fast path and it keeps every card
+at the curated quality floor. Hand-authoring a card from scratch is the
+*exception*, taken only when the content genuinely needs a shape no reference
+provides. The cards' *content* still emerges from what the transcript says — but
+their *visual shell* is reused, not reinvented per card. This is the single
+biggest lever on how long a video takes to produce: cloning 15 cards is minutes;
+bespoke-designing 15 cards is half an hour.
 
 Inspectable intermediate files in the work directory:
 
@@ -665,12 +672,15 @@ Available fonts (woff2 in `<SKILL_DIR>/assets/fonts/`, staged to work dir in Ste
 `LXGW WenKai TC` (Chinese hand-script), `Inter` (modern sans), `Virgil`
 (geometric hand). Reference via `@font-face` or `font-family` directly.
 
-For inspiration on visual patterns, `<SKILL_DIR>/references/styles/`
-ships 9 self-contained reference cards (pastel-aura / glass / spatial /
-nebula-glass / minimal / geom / terminal / swiss /
-editorial-print) that you can copy as starting points —
-but **do not feel constrained to match any of these**. Each card is your own
-design. `editorial-print` is the odd one out — an **asset-driven montage** (user
+`<SKILL_DIR>/references/styles/` ships 9 self-contained reference cards
+(pastel-aura / glass / spatial / nebula-glass / minimal / geom / terminal /
+swiss / editorial-print). **These are not "inspiration" — they are your card
+templates. The default is to clone the chosen style's fragment for every card
+and swap only the text + accent index.** Departing from the reference (a custom
+shape, a one-off layout) is a deliberate exception you take only when a specific
+card's content can't fit any reference — not the per-card default. Cloning is
+what keeps a 15-card video at minutes, not half an hour, AND holds every card to
+the curated quality bar. `editorial-print` is the odd one out — an **asset-driven montage** (user
 images/clips arranged like a printed spread, no talking-head spine); it has its
 own multi-asset kit in `references/editorial-print-montage.md` — read that when
 you reach for it.
@@ -944,8 +954,24 @@ half.
 
 ### 8. Write Each Card's HTML
 
-Create `$WORK_DIR/public/cards/{card-id}.html` for each card. Each file
-contains a single rooted HTML fragment that follows this contract:
+**Clone-first (the default — read before writing anything).** For each card:
+
+1. `cp "$SKILL_DIR/references/styles/<chosenStyle>.html" "$WORK_DIR/public/cards/<card-id>.html"`
+2. Rename the fragment's `data-card-id="ref-<key>"` to this card's `<card-id>`
+   (update the scoped `<style>` selectors + element ids to match).
+3. Swap the placeholder copy for this card's real `contentHints` text, and set
+   the accent to the card's `accentIndex`.
+4. Stop there. Do **not** redesign the layout, re-pick fonts, or re-author the
+   ornament — the reference already encodes the curated look. Touch structure
+   only for the rare card whose content (e.g. a 4-way comparison) genuinely
+   doesn't fit the reference's shape.
+
+Writing a fragment from a blank file is the **exception**, not the routine. The
+contract below documents what a valid fragment looks like (so you can validate a
+clone and author the rare bespoke card) — it is **not** an instruction to build
+every card from scratch.
+
+Each file contains a single rooted HTML fragment that follows this contract:
 
 #### Card HTML Contract
 
@@ -1456,12 +1482,61 @@ SKILL_DIR="<SKILL_DIR>"
 mkdir -p "$WORK_DIR/public/fonts" "$WORK_DIR/public/vendor" "$WORK_DIR/public/cards"
 cp -n "$SKILL_DIR/assets/fonts/"*            "$WORK_DIR/public/fonts/"
 cp -n "$SKILL_DIR/assets/vendor/gsap.min.js" "$WORK_DIR/public/vendor/"
+# copy the STATIC composition shell — do NOT retype it
+cp "$SKILL_DIR/references/composition-shell.html" "$WORK_DIR/public/index.html"
 # stage the input video so the composition can reference it by relative path
 ln -f "$VIDEO_PATH" "$WORK_DIR/public/input-video.mp4" 2>/dev/null \
   || cp "$VIDEO_PATH" "$WORK_DIR/public/input-video.mp4"
 ```
 
-#### Composition Template
+**Then fill the shell — do not regenerate it.** `index.html` is now the copied
+`references/composition-shell.html`. Edit only these slots:
+
+1. **The 6 `{{...}}` tokens** at the top: `{{BG}}` `{{TEXT}}` `{{ACCENT_0..4}}`
+   (from the chosen `themeId` palette), `{{DURATION}}` (= `composition.durationSeconds`),
+   `{{FPS}}`, `{{WIDTH}}`, `{{HEIGHT}}`. The tokens appear in a few places each
+   (e.g. `{{DURATION}}` on `#stage`, the `<video>`, and `compDurationSec`) — a
+   `sed` pass replaces all at once, e.g.
+   `sed -i '' -e 's/{{DURATION}}/121.2/g' -e 's/{{FPS}}/30/g' … "$WORK_DIR/public/index.html"`.
+2. **`.video-wrapper` initial `left/top/width/height`** — set to card-01's layout bounds.
+3. **The two `INJECT-*` markers** — **do NOT hand-author these.** Run the
+   generator; it reads `storyboard.json` + `public/cards/*.html` and fills both
+   the card-host divs and the full GSAP timeline (enter / drift / exit, with
+   `data-anim` attributes compiled via the cheat sheet, times quantized,
+   `data-track-index` increasing, drift repeats finite):
+
+   ```bash
+   python3 "$SKILL_DIR/scripts/build-timeline.py" --work "$WORK_DIR"   # add --slip 0.55 to tune
+   ```
+
+   It is **idempotent** — re-run it after editing any card HTML or the
+   storyboard, and it re-injects between its own `BEGIN/END` sentinels. What it
+   leaves to you: **video `#video-wrap` reframes** for multi-layout / dynamic
+   (起伏运镜) rhythm — opt in per card by adding
+   `"videoBounds": { "left":…, "top":…, "width":…, "height":… }` to that card in
+   `storyboard.json` before running the script, and it emits the reframe tween at
+   that card's slip point. Add `"videoClass": "video-wrapper pip"` (or any chrome
+   class) alongside it when the reframe needs a different look than the default
+   `video-wrapper framed` (e.g. pip-pill, or `video-wrapper` for a clean overlay).
+   Cards without `videoBounds` keep the video where it was (the calm fixed-rhythm
+   default). Run `build-timeline.py` AFTER Step 8 (cards must exist) and AFTER the
+   `sed` token fill above. The script prints timing warnings to stderr (too-short
+   cards, out-of-order starts, broken slip overlap) — read them; they mean the
+   storyboard needs fixing, not the output.
+
+   > `sed -i ''` is macOS/BSD syntax (the empty `''` is the in-place backup arg).
+   > On Linux use `sed -i` with no `''`. Tip to fill all tokens in one pass:
+   > write the 11 values into a small `vars.sed` and run `sed -i '' -f vars.sed`.
+
+> **Hand-authoring the timeline is the exception.** Only edit the generated
+> region directly for a genuinely one-off motion the cheat sheet can't express —
+> and then stop re-running the script (it would overwrite your edit). For
+> everything normal, declare motion as `data-anim-*` attributes on the card
+> elements (Step 8) and let the generator compile them.
+
+The reference below shows a *filled* shell (theme `classic`, 2 cards) so you can
+see what the slots look like once populated — it is the SAME skeleton as the
+shell file, NOT a separate thing to retype:
 
 ```html
 <!doctype html>
