@@ -397,7 +397,8 @@ question, **precompute three things**:
    Map → **day/night auto-switch**: a bright video (`mode=light`) lands a
    light style (`swiss` / `pastel-aura` / `minimal`); a dark video
    (`mode=dark`) lands a dark style (`nebula-glass` / `glass` /
-   `spatial`); `temp` (warm/cool) picks within that. Use
+   `glass-hud` / `spatial`); `temp` (warm/cool) picks within that
+   (warm/neutral 口播 → `glass-hud`). Use
    `recommend[0]` as **`recommendedStyle`**, and in the style question
    below **reorder so the group containing `recommendedStyle` is FIRST**
    and append " (推荐 · 匹配视频 <mode>/<temp>)" to that group's label.
@@ -465,7 +466,8 @@ AskUserQuestion({
         { label: "左右分屏 (split)",     description: "video 和 card 各占画面一半。访谈 / 数据并列时最稳，画面分隔清晰。" },
         { label: "上下分屏 (stack)",     description: "video 在上方 (~52%)，card 在下方。说话人头像 + 总结句的经典组合，竖屏也好用。" },
         { label: "画中画 (pip)",         description: "card 满屏，video 缩成圆角小窗在右上角。内容为主、speaker 为辅时用。" },
-        { label: "全屏浮层 (overlay)",   description: "video 全屏播放，card 作为玻璃浮层落在画面上。情绪 / 电影感强烈。" }
+        { label: "全屏浮层 (overlay)",   description: "video 全屏播放，card 作为玻璃浮层落在画面上。情绪 / 电影感强烈。" },
+        { label: "3D 卡片轮播 (deck)",   description: "卡片本身就是主角：一张正对镜头，左右两张退到 3D 扇形里，像 cover-flow 一样轮转。video 藏掉或缩成右上角小窗。适合评价墙 / 卖点轮播 / 多条金句。配 pastel-aura / glass 风格做天空底最好看。" }
       ]
     },
     {
@@ -475,11 +477,12 @@ AskUserQuestion({
       // 中文优先词库（中文名 + 大白话「什么时候用」），让中国创作者一眼会选。
       // 括号里的英文 key 不展示给非技术用户也行，但保留它，agent 用它映射到
       // frame auto-pick matrix 的列（cinematic / clinical / pastel-aura / editorial-print）。
-      // 4 个分组成员与下方 frame 矩阵一一对应，顺序可调（已把暗调组放第一）。
+      // 5 个分组成员与下方 frame 矩阵对应（国风水墨/字骸成形组 frame 恒 clean，见矩阵豁免）。
       options: [
-        { label: "暗调电影感（黑底·高级·有动态）", description: "黑底、高级、电影质感。含：暗夜星河(nebula-glass，黑底流动粒子+玻璃，最高级最科技) · 玻璃拟态(glass，简单两色渐变+磨砂玻璃，半透明干净高级) · 暖光太空(spatial，黑底暖橙光，温暖有空间感) · 撞色大字(geom，黑底亮色块超大字，大胆有冲击)。什么时候用：产品/科技发布、短视频高光、强情绪开场、想要高级感。" },
+        { label: "暗调电影感（黑底·高级·有动态）", description: "黑底、高级、电影质感。含：暗夜星河(nebula-glass，黑底流动粒子+玻璃，最高级最科技) · 玻璃拟态(glass，简单两色渐变+磨砂玻璃，半透明干净高级) · 暖玻 HUD(glass-hud，暖玻璃面板浮在真人口播上+顶部章节条+底部双语字幕，橙色 accent，口播枚举/护城河清单专用，恒 overlay) · 暖光太空(spatial，黑底暖橙光，温暖有空间感) · 撞色大字(geom，黑底亮色块超大字，大胆有冲击)。什么时候用：产品/科技发布、短视频高光、强情绪开场、口播枚举拆解、想要高级感。" },
         { label: "干净专业（数据·报告·严肃）", description: "干净、克制、权威。含：瑞士网格(swiss，白底红点大字，专业权威) · 黑白极简(minimal，纯黑白大字+大留白，高级克制) · 代码终端(terminal，黑底绿字代码风，技术极客)。什么时候用：财报数据、调查报告、技术教程、严肃陈述。" },
         { label: "浅色清爽（日常·白天·轻松）", description: "浅色、柔和、不刺眼。含：柔光浅色(pastel-aura，浅色柔和，白天/日常感)。什么时候用：个人日常分享、品牌叙事、轻松内容、画面偏亮的视频。" },
+        { label: "国风水墨（功夫·书法·禅）", description: "暖宣纸 + 焦墨小字聚成人形落在圆相里，朱砂点缀、竖排序号。含：字骸成形(ink-figure)。什么时候用：国风/功夫/书法/茶禅/文化叙事、招式谱式枚举、反思金句。" },
         { label: "杂志素材（作品集·素材排版）", description: "把照片/视频排成杂志跨页，不是文字卡。含：杂志印刷(editorial-print)。什么时候用：作品集、大事记、公司/产品介绍、素材展示（走 references/editorial-print-montage.md）。" }
       ]
     },
@@ -528,15 +531,18 @@ the reply. Bullet-style 1/2/3/4 keeps the reply parseable:
    B. stack   上下分屏 (video 顶, card 底)
    C. pip     画中画 (card 满屏, video 圆角小窗)
    D. overlay 全屏浮层 (video 全屏, card 玻璃浮层)
+   E. deck    3D 卡片轮播 (卡片主角, 左右扇形轮转, video 藏掉/缩角)
 
-3) 视觉风格 — 你的内容想要什么感觉？(4 选 1)：
+3) 视觉风格 — 你的内容想要什么感觉？(5 选 1)：
    A. 暗调电影感（黑底·高级·有动态）：暗夜星河 / 玻璃拟态 / 暖光太空 / 撞色大字
       → 产品科技发布、短视频高光、强情绪、想高级感
    B. 干净专业（数据·报告·严肃）：瑞士网格 / 黑白极简 / 代码终端
       → 财报数据、调查报告、技术教程、严肃陈述
    C. 浅色清爽（日常·白天·轻松）：柔光浅色
       → 个人日常分享、品牌叙事、轻松内容、画面偏亮
-   D. 杂志素材（作品集·素材排版）：杂志印刷
+   D. 国风水墨（功夫·书法·禅）：字骸成形
+      → 国风/功夫/书法/茶禅/文化叙事、招式谱式枚举、反思金句
+   E. 杂志素材（作品集·素材排版）：杂志印刷
       → 作品集、大事记、公司/产品介绍、素材展示（非文字卡）
 
 4) 卡片数量 (takeaway 节奏)：
@@ -602,12 +608,18 @@ After the user answers (any channel):
 4. **Auto-pick the video frame** from this table (frames don't ask the
    user — they follow from layout × style):
 
-   | layout | pastel-aura (light) | editorial-print (montage) | clinical styles (swiss / terminal / minimal) | cinematic styles (geom / glass / spatial / nebula-glass) |
+   | layout | pastel-aura (light) | editorial-print (montage) | clinical styles (swiss / terminal / minimal) | cinematic styles (geom / glass / glass-hud / spatial / nebula-glass) |
    |---|---|---|---|---|
    | `split` | `clean` | `polaroid` | `hairline` | `clean` / `hairline` (spatial 取景框同源; nebula-glass 恒 `clean`) |
    | `stack` | `clean` | `polaroid` | `hairline` | `clean` / `hairline` |
    | `pip` | `clean` (white-ring pip pill) | `clean` (pip pill already has chrome) | `clean` | `clean` (spatial: 给 pip 加暖光取景框角标) |
-   | `overlay` | `clean` (full-bleed forbids deco frames) | `clean` (full-bleed forbids deco frames) | `clean` | `clean` (nebula-glass: 全屏粒子场忌加边框) |
+   | `overlay` | `clean` (full-bleed forbids deco frames) | `clean` (full-bleed forbids deco frames) | `clean` | `clean` (nebula-glass: 全屏粒子场忌加边框; glass-hud: 章节条/进度轴已是 chrome，恒 `clean`) |
+   | `deck` | `clean` | n/a (montage is fullscreen) | `clean` | `clean` (3D 扇形忌加边框) |
+
+   > **`ink-figure` & `deck` are exempt from this matrix — frame is always
+   > `clean`.** `ink-figure`'s enso + rice paper carry their own ornament (a
+   > deco frame double-decorates and cheapens it); `deck`'s 3D fan forbids any
+   > chrome around the cards.
 
    > **`editorial-print` is exempt from this matrix.** Its cards are fullscreen
    > asset *scenes* with no video↔card split, and every asset panel carries its
@@ -631,7 +643,7 @@ After the user answers (any channel):
    matching `references/<dim>/<key>.html` for tokens and structure.
 
 If the user picks an answer via "Other" with a free-text style name not
-in the 15-style library, treat it as a hint to design a fresh card
+in the 10-style library, treat it as a hint to design a fresh card
 visual yourself, but still anchor on the chosen layout's bounds.
 
 #### Render Strategy Inputs
@@ -647,7 +659,7 @@ the remaining per-card decisions are:
   through (or fill with the card / a backdrop).
 - **`card.zone` per card**: derive from your chosen composition layout
   (split → side-panel, stack → lower-third, pip → fullscreen, overlay
-  → video-overlay), OR pick a different zone for one-off variants
+  → video-overlay, deck → fullscreen), OR pick a different zone for one-off variants
   (fullscreen for hero / quote, whiteboard-area for dense data).
 - **`accentIndex` per card**: each card pulls one of the 5 theme accent
   colors. Vary across cards for rhythm; reuse the same index when two
@@ -672,9 +684,9 @@ Available fonts (woff2 in `<SKILL_DIR>/assets/fonts/`, staged to work dir in Ste
 `LXGW WenKai TC` (Chinese hand-script), `Inter` (modern sans), `Virgil`
 (geometric hand). Reference via `@font-face` or `font-family` directly.
 
-`<SKILL_DIR>/references/styles/` ships 9 self-contained reference cards
-(pastel-aura / glass / spatial / nebula-glass / minimal / geom / terminal /
-swiss / editorial-print). **These are not "inspiration" — they are your card
+`<SKILL_DIR>/references/styles/` ships 11 self-contained reference cards
+(pastel-aura / glass / glass-hud / spatial / nebula-glass / minimal / geom / terminal /
+swiss / editorial-print / ink-figure). **These are not "inspiration" — they are your card
 templates. The default is to clone the chosen style's fragment for every card
 and swap only the text + accent index.** Departing from the reference (a custom
 shape, a one-off layout) is a deliberate exception you take only when a specific
@@ -693,13 +705,13 @@ visual dimensions you can freely mix:
 
 ```
 Style  ×  Layout  ×  VideoFrame
- (9)       (4)         (3)
+ (11)      (5)         (3)
 ```
 
 | dimension | keys | what it decides |
 |---|---|---|
-| **style** | `minimal` `geom` `terminal` `swiss` `pastel-aura` `glass` `spatial` `nebula-glass` `editorial-print` | the card's visual language — fonts, colors, ornament, layout-within-card |
-| **layout** | `split` `stack` `pip` `overlay` | how the source video and the card share the canvas |
+| **style** | `minimal` `geom` `terminal` `swiss` `pastel-aura` `glass` `glass-hud` `spatial` `nebula-glass` `editorial-print` `ink-figure` | the card's visual language — fonts, colors, ornament, layout-within-card |
+| **layout** | `split` `stack` `pip` `overlay` `deck` | how the source video and the card share the canvas |
 | **frame** | `clean` `hairline` `polaroid` | the decorative chrome around the video element |
 
 Read `<SKILL_DIR>/references/DESIGN_INDEX.md`
@@ -738,6 +750,7 @@ Don't pick a style because it "looks nice" — match it to what the card is
 |---|---|---|
 | 数字、对比、财报、证据 | 瑞士网格 `swiss` · 代码终端 `terminal` · 黑白极简 `minimal` | 冷、网格、零色彩噪音 —— 数据就该像数据 |
 | 故事、情绪、品牌一句话 | 柔光浅色 `pastel-aura` · 玻璃拟态 `glass` · 暗夜星河 `nebula-glass` | 有纵深也克制；靠光和排版，不靠暖纸小装饰 |
+| 口播枚举、方法论拆解、N 个坑/原则、护城河清单 | 暖玻 HUD `glass-hud`（恒 overlay） | 玻璃面板浮在真人上 + 章节条 + 编号列表 + 底部双语字幕，人脸全程在画面里 |
 | 高光时刻、产品揭晓、金句 | 暗夜星河 `nebula-glass` · 撞色大字 `geom` · 玻璃拟态 `glass` · 暖光太空 `spatial` | 大胆、有纵深、动态感 —— 撑得起强调（暗夜星河 = 黑底双星粒子场，科技/电影感最强）|
 | 密集讲解、框架、步骤 | 瑞士网格 `swiss` · 代码终端 `terminal` · 黑白极简 `minimal` | 结构化、小字也清楚 |
 | 随手的个人分享 | 柔光浅色 `pastel-aura` | 柔、亲和、像 feed 原生、不正式 |
@@ -749,7 +762,7 @@ register (e.g. the one data card in an otherwise warm story). If you pick a
 style against this grid (e.g. `glass` for a tax-law breakdown), do it
 on purpose for contrast — not by default.
 
-The 9 styles are skill-side design tokens, **not composition-level themes** —
+The 11 styles are skill-side design tokens, **not composition-level themes** —
 they don't need to be declared in `storyboard.composition`; they live
 inside each card's HTML. The `themeId` field can still pick a
 composition-level palette (table above) that controls page-body background
@@ -881,7 +894,7 @@ Schema does NOT store per-card video bounds. `videoTrack.bounds` is
 `index.html`. There is no `card.layout` field — earlier versions of this
 doc invented one; the real schema only has `card.zone`.
 
-**4 composition layouts** (from `references/layouts/`) — each is a
+**5 composition layouts** (from `references/layouts/`) — each is a
 recipe pairing a `zone` with a `#video-wrap` tween target:
 
 | composition layout | recommended `card.zone` | GSAP target for `#video-wrap` (landscape 1920×1080) | GSAP target for `#video-wrap` (portrait 1080×1920) | when to use |
@@ -890,6 +903,7 @@ recipe pairing a `zone` with a `#video-wrap` tween target:
 | `stack` | `lower-third` | `{ left: 14, top: 14, width: 1892, height: 548 }` (top 52%) | `{ left: 0, top: 0, width: 1080, height: 844 }` (top 44%) | speaker on top + summary card below |
 | `pip` | `fullscreen` | `{ left: 1480, top: 760, width: 400, height: 300 }` + add `.framed` class | `{ left: 690, top: 28, width: 360, height: 203 }` + add `.framed` | content-heavy card + corner pip |
 | `overlay` | `video-overlay` | `{ left: 0, top: 0, width: 1920, height: 1080 }` (full-bleed) | `{ left: 0, top: 0, width: 1080, height: 1920 }` | cinematic / dramatic / glass card on full video |
+| `deck` | `fullscreen` | showcase: `{ opacity: 0 }` (hide speaker) · witness pip: `{ left: 1528, top: 40, width: 336, height: 189 }` | showcase: `{ opacity: 0 }` · witness pip: `{ left: 706, top: 32, width: 344, height: 194 }` | cards ARE the show — 3D cover-flow carousel (testimonials / 卖点 / 金句); see `layouts/deck.html` for the fan transforms + advance tween |
 
 For 4:5 (1080×1350), scale portrait y/h values by `1350/1920 ≈ 0.703`
 (see Step 7.0 Channel A / Channel B `recommendedRatio` resolution
@@ -1073,7 +1087,7 @@ declaration into the single master GSAP timeline in Step 9.
 
 #### Card Sizing — Mobile-First in Portrait
 
-The 9 `references/styles/*.html` are sized for a **1920×1080 landscape**
+The 11 `references/styles/*.html` are sized for a **1920×1080 landscape**
 preview. When `storyboard.layout = "portrait"` (1080×1920, the dominant
 case for social / mobile), **scale every visual size up** — phones hold
 the screen close, and the same pixel count reads smaller than on a
@@ -1811,6 +1825,7 @@ which list all three ratios):
 | `pip` (bottom-right) | `fullscreen` | `{ left: 1480, top: 760, width: 400, height: 300 }` | `pip-pill` (border-radius + ring + shadow) |
 | `pip` (top-left) | `fullscreen` | `{ left: 40, top: 40, width: 400, height: 300 }` | `pip-pill` |
 | `overlay` (video full-bleed) | `video-overlay` | `{ left: 0, top: 0, width: 1920, height: 1080 }` (no change from default) | — |
+| `deck` (3D card carousel) | `fullscreen` | showcase: `{ opacity: 0 }` · witness pip: `{ left: 1528, top: 40, width: 336, height: 189 }` | `pip-pill` only in witness mode |
 | **hide video** (pure-graphic moment) | `fullscreen` | `{ opacity: 0 }` (or move off-canvas) | — |
 
 To toggle the pip-pill chrome (border-radius + white ring + drop shadow)
@@ -1952,8 +1967,17 @@ For YOUR OWN spot-checks during building, use single-frame snapshots
 (cheap), not renders:
 
 ```bash
-npx hyperframes snapshot public --at 5   # writes public/snapshots/frame-…png
+npx hyperframes snapshot public --at 5 --describe false   # writes public/snapshots/frame-…png
 ```
+
+> `--describe` is hyperframes' built-in Gemini vision QA — it runs **by
+> default** and prints `GEMINI_API_KEY not set, skipping` on every frame
+> when no key is set. Pass `--describe false` to silence it (this project
+> doesn't use Gemini). To read the frames back, glob the **real** output
+> path `public/snapshots/frame-*.png` — never `snap-*.png`. Under zsh an
+> unmatched glob is a hard error (`nomatch` → exit 1), so a wrong pattern
+> kills the whole command; if a snapshot loop might match nothing, guard
+> with `setopt +o nomatch` or test the path first.
 
 Manage preview servers: `hyperframes preview --list` /
 `hyperframes preview --kill-all`.
@@ -1979,7 +2003,7 @@ For a sanity check before the full render, capture a single frame at a
 specific timestamp:
 
 ```bash
-npx hyperframes snapshot public --at 5 --out snapshot-5s.png
+npx hyperframes snapshot public --at 5 --out snapshot-5s.png --describe false
 ```
 
 ### 12. Report Results

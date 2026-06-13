@@ -6,7 +6,7 @@ designing a takeaway video.
 
 ```
 Style  ×  Layout  ×  VideoFrame
- (9)       (4)         (3)        = 108 possible combinations
+ (11)      (5)         (3)        = 165 possible combinations
 ```
 
 > **One style breaks the mold:** `editorial-print` is an **asset-driven montage**
@@ -29,6 +29,9 @@ self-contained HTML fragment that follows the interflow-video-cut card-HTML cont
 | `stack` | [layouts/stack.html](layouts/stack.html) | video on top (~52%), card below | talking-head with summary card |
 | `pip` | [layouts/pip.html](layouts/pip.html) | card fills canvas, video rounded PiP in corner | content-heavy moment, speaker secondary |
 | `overlay` | [layouts/overlay.html](layouts/overlay.html) | video full-bleed, glass card floats on bottom | cinematic / dramatic moments |
+| `deck` ◇ | [layouts/deck.html](layouts/deck.html) | 3D fanned card carousel (cover-flow); cards ARE the show, video hides or becomes a corner pip | testimonials / 卖点轮播 / 多条金句 |
+
+◇ `deck`（**3D 旋转木马 / 卡片叠放**）— 唯一一个**卡片本身就是主角**的 layout：一张卡正对镜头，左右两张退到 3D 扇形里（rotateY + translateZ 后移 + 模糊变暗），每切一张像 cover-flow 一样把当前卡转去左侧、下一张从右侧转上来。**它替代默认的 slip 转场**（卡片不再上滑消失，而是在 3D 扇里轮转）。`#video-wrap` 两种用法：(A) showcase — 直接 `opacity:0` 把口播藏掉，让卡墙独占画面；(B) witness pip — 留一个右上角圆角小窗看着卡墙转。背景别用纯色，配 `pastel-aura` / `glass` 风格把 `#stage` 铺成天空/极光底，让扇形卡片浮在一个世界里。frame 恒 `clean`。整套 perspective + 三槽位 transform + advance 补间写在 [layouts/deck.html](layouts/deck.html) 头注释。最适合：评价墙 / testimonials、产品卖点轮播、多条金句、功能巡览。
 
 A layout is a **two-part recipe**: pick a `card.zone` value to put in
 `storyboard.json` AND author a GSAP tween for `#video-wrap` to its
@@ -46,6 +49,7 @@ exist in the real schema; the strict v3 schema only has `card.zone`.)
 |---|---|---|---|
 | **暗夜星河** | `nebula-glass` | 黑底+流动粒子+玻璃，**最高级最有科技感**（旗舰） | 星空 · 粒子 · 未来 · AI · 发布会 |
 | **玻璃拟态** | `glass` | 简单两色渐变 + 磨砂玻璃，半透明、干净、高级 | 玻璃 · 磨砂 · 半透明 · 简洁 · 高级 |
+| **暖玻 HUD** | `glass-hud` | 暖玻璃面板**浮在真人口播上** + 顶部章节条 + 底部进度轴双语字幕，橙色 accent | 口播 · 叠加 · 章节条 · 双语字幕 · 护城河枚举 · terracotta |
 | **暖光太空** | `spatial` | 黑底+暖橙光，温暖又有空间感（唯一的暖黑底） | 暖光 · 深空 · 温暖 · 人物 · 治愈 |
 | **撞色大字** | `geom` | 黑底+亮色块+超大字，大胆有冲击力 | 撞色 · 大字 · 态度 · 宣言 · 潮 |
 | **瑞士网格** | `swiss` | 白底+红点+大字，干净、专业、权威 | 瑞士 · 网格 · 报告 · 数据 · 严肃 |
@@ -53,15 +57,17 @@ exist in the real schema; the strict v3 schema only has `card.zone`.)
 | **代码终端** | `terminal` | 黑底绿字代码风，技术、极客、工程感 | 代码 · 终端 · 技术 · 编程 · 极客 |
 | **柔光浅色** | `pastel-aura` | 浅色柔和不刺眼，日常、白天、轻松（白天锚点） | 浅色 · 柔和 · 清爽 · 日常 · 温柔 |
 | **杂志印刷** | `editorial-print` | 把照片/素材排成杂志跨页（不是文字卡） | 杂志 · 印刷 · 作品集 · 大事记 · 排版 |
+| **字骸成形** | `ink-figure` | 暖宣纸 + 水墨字相，小字聚成人形落在圆相里，朱砂点缀 | 国风 · 功夫 · 书法 · 水墨 · 禅 · 招式谱 |
 
 **4 大类（选风格题就按这个分）：**
-- **暗调电影感**（黑底·高级·有动态）= 暗夜星河 / 玻璃拟态 / 暖光太空 / 撞色大字
+- **暗调电影感**（黑底·高级·有动态）= 暗夜星河 / 玻璃拟态 / 暖玻 HUD / 暖光太空 / 撞色大字
 - **干净专业**（数据·报告·严肃）= 瑞士网格 / 黑白极简 / 代码终端
 - **浅色清爽**（日常·白天·轻松）= 柔光浅色
+- **国风水墨**（文化·功夫·书法）= 字骸成形
 - **杂志素材**（作品集·素材排版）= 杂志印刷
 
 > 自动匹配（`auto-style.py`）也按中文名回报：亮视频→柔光浅色/瑞士网格；
-> 暗+冷视频→暗夜星河/玻璃拟态；暗+暖视频→暖光太空。
+> 暗+冷视频→暗夜星河/玻璃拟态；暗+暖视频→暖光太空/暖玻 HUD；暗+中性→暖玻 HUD/暗夜星河。
 
 ## Styles — the card's visual language
 
@@ -73,9 +79,11 @@ exist in the real schema; the strict v3 schema only has `card.zone`.)
 | `swiss` | [styles/swiss.html](styles/swiss.html) | white · Helvetica · strict double rules · red accent | `#e8190f` | Helvetica/Inter |
 | `pastel-aura` ★ | [styles/pastel-aura.html](styles/pastel-aura.html) | ivory + mint/lavender/peach aura gradients · serif headlines · white floating cards | `#A98F5E` | Georgia + Songti SC serif |
 | `glass` ✦ | [styles/glass.html](styles/glass.html) | **玻璃拟态 glassmorphism** · simple two-color gradient · prominent frosted-glass panel · cool palette · film grain | `#5B8CFF` | Inter + PingFang SC |
+| `glass-hud` ✺ | [styles/glass-hud.html](styles/glass-hud.html) | **暖玻 HUD** · warm-neutral frosted panel floating **over the live talking-head** · top chapter rail · bottom scrubber + bilingual caption · mono EN labels · numbered list w/ right-aligned notes | `#E0894A` | PingFang SC + ui-monospace |
 | `spatial` ✶ | [styles/spatial.html](styles/spatial.html) | single warm-dark atmosphere · faux-3D floating panel (perspective + double shadow) · warm rim light · viewfinder corner chrome · grain + halftone | `#FF8A4C` | Inter + PingFang SC + mono meta |
 | `nebula-glass` ✸ | [styles/nebula-glass.html](styles/nebula-glass.html) | pure-black deep space · twin flow-field particle stars (silver + electric-blue hot-core) · frosted-glass panel · Swiss/Guizang type (hollow giant numeral, hairline rules) · viewfinder chrome | `#5B8CFF` | Inter + PingFang SC |
 | `editorial-print` ◆ | [styles/editorial-print.html](styles/editorial-print.html) | warm paper · 3px ink borders · HARD offset shadow (no blur) · grain · ghost serif · hand-drawn arrow — an **asset montage**, not a text card | `#16140F` | serif headline + Inter labels |
+| `ink-figure` ◈ | [styles/ink-figure.html](styles/ink-figure.html) | warm rice paper · sumi-ink calligraphy · 竖排序号 title · seal-red chip · 小字聚成人形 inside an enso · ghost glyph watermark | `#A4291F` | LXGW WenKai TC kai + Inter meta |
 
 ★ `pastel-aura` — light/soft branch: ivory + pastel aurora gradients, serif
 headlines, white floating cards. Best for 个人分享 / brand storytelling /
@@ -86,6 +94,20 @@ AI·SaaS tone. Pairs well with `pip` or `stack`; pip uses a white-ring pill.
 光斑），磨砂玻璃面板是绝对主角（backdrop-blur 拉满 + 亮边 + 顶部高光）。**不要多团
 彩雾、不要 hue 大范围转**。与 nebula-glass 同为冷调玻璃，但 nebula 是颗粒星场、这个是
 纯净玻璃拟态。accent `#5B8CFF`。Best with `overlay` / `stack` / fullscreen hero。
+
+✺ `glass-hud`（**暖玻 HUD** · 口播玻璃叠加）— `glass` 的「口播叠加版」：不再是满屏卡，
+而是**暖中性磨砂玻璃面板浮在真人视频上**（面板透明、视频从玻璃后透出），terracotta 橙
+`#E0894A` 做唯一 accent，英文小标 + 进度/字幕英文用 **等宽 mono**。三个部件分两层：
+**(A) 玻璃信息面板 = per-card**（kicker 章节名 + 大标题 + EN mono 副标 + 发丝线 + 编号列表
+「橙序号 · 左 item · 右对齐 dim 批注」，clone `styles/glass-hud.html` 即得）；
+**(B) 顶部章节条 + 底部进度轴 + 双语字幕 = composition-level chrome**（常驻整片，贴进
+composition-shell 的 `#stage`，配方写在 `styles/glass-hud.html` 头注释「Composition-level」段；
+底部双语字幕**复用 skill 的 `subtitles` 机制**只换皮）。**必配可读性渐变**否则亮视频上糊字。
+气质：克制地「上下框住人脸」——顶部进度、玻璃信息在上半左、人脸居中、字幕在底。
+accent `#E0894A`，字体 PingFang SC + ui-monospace（mono 系统回退已在 terminal 验证）。
+Best with `overlay`（恒用）；frame 恒 `clean`；用于：口播枚举（N 个坑 / N 条原则 / 护城河式
+清单）/ 销售·方法论拆解 / 「你以为 A 其实 B」反转金句 / 暖调车内·室内·人物口播。
+auto-style.py 已列入 dark·warm / dark·neutral 候选。
 
 ✶ `spatial`（暗场太空舱 / 空间感）— `glass` 的「立体化升级」：同样
 暗场暖光，但把沉浸式 3D 体验页的 DNA（单一氛围色笼罩 + 电影级打光 +
@@ -129,6 +151,20 @@ photo-grid / collage / logo-strip / print-stack), 3 transitions (whip-pan /
 blinds-wipe / paper-flash), asset staging, image↔video slot rules, and the two
 usage modes — in [editorial-print-montage.md](editorial-print-montage.md).
 Frame is always `clean` (panels carry their own border).
+
+◈ `ink-figure`（**字骸成形 / 水墨字相**）— 国风/武侠水墨调：暖宣纸底 + 焦墨小字
+聚成一个**人形剪影**（功夫招式）落在细笔「圆相 enso」里，朱砂红点缀，左侧竖排大字
+（kai 体）+ 朱砂序号印（壹/贰/叁），背后一个超大 ghost「武」字水印，纸纤维肌理。
+气质克制、像毛笔写出来的，**不是花哨拼贴**。签名招式：竖排 kai 标题 + 朱砂方印序号 +
+细笔残圆 enso + 字成人形（少量字染朱砂、核心几字加重）。**真正的「字成人形」群字 morph
+（招式间形随意转）是 composition 级 `<canvas>`**（卡片禁 `<script>`）：~150 个字从散布
+位置 lerp 到当前招式的剪影锚点，由 GSAP 时间轴 onUpdate 驱动、写成确定式 `pos=f(t)`，
+这样 hyperframes 逐帧捕获才能精确复现（守则同 nebula-glass：禁 `Math.random`、禁
+`repeat:-1`、用 i 的哈希做种）。`styles/ink-figure.html` 里的卡片是**免脚本静态近似**
+（手摆字成一个 pose），不需要活体 morph 时直接 clone。accent 朱砂 `#A4291F`，字体
+`LXGW WenKai TC`（已随 skill 打包）。Best with `stack` / `split` / `pip`；frame 恒
+`clean`（圆相和宣纸自带装饰，加边框反而廉价）。用于：国风 / 功夫 / 书法 / 茶禅 /
+文化叙事 · 招式谱式枚举 · 反思金句。
 
 Choose by content tone, not by content type — `swiss` works for a reflective
 finance piece if the tone is disciplined; `terminal` works for non-tech if the
@@ -212,9 +248,12 @@ move, never out of sync.
 | 社交剪辑（9:16） | `pastel-aura` × `stack`, `nebula-glass` × `overlay` |
 | 技术教程 | `terminal` × `split`, `minimal` × `pip` |
 | 情绪故事 / 旁白 | `nebula-glass` × `overlay`, `glass` × `overlay`, `spatial` × `overlay`, `pastel-aura` × `stack` |
+| 口播枚举 / 方法论拆解 / 护城河清单 | `glass-hud` × `overlay`（章节条 + 编号列表 + 双语字幕）, `terminal` × `pip` |
 | 短视频高光 / 电影感 | `nebula-glass` × `overlay`, `spatial` × `overlay`, `glass` × `overlay`, `geom` × `pip` |
 | 产品发布 / 科技沉浸感 | `nebula-glass` × `overlay`, `spatial` × `pip`, `spatial` × `overlay`, `glass` × `overlay` |
 | 极简陈述 | `minimal` × `split`, `swiss` × `overlay` |
+| 评价墙 / 卖点轮播 / 多条金句 | `pastel-aura` × `deck`, `glass` × `deck` |
+| 国风 / 功夫 / 书法 / 茶禅 / 文化 | `ink-figure` × `stack`, `ink-figure` × `split` |
 | 素材展示 / 作品集 / 大事记 / 公司介绍 | `editorial-print`（fullscreen scene, no video↔card split — see [montage kit](editorial-print-montage.md)） |
 
 These are starting points only. Look at the transcript, pick the tone, then
@@ -228,7 +267,8 @@ average color via `ffmpeg scale=1:1`, and classifies the video as
 **light/dark × warm/cool**, returning a ranked `recommend` list. This is the
 **白天/黑夜自动切换**: a bright video → a light style (`swiss` / `pastel-aura` /
 `minimal`); a dark video → a dark style (`nebula-glass` / `glass` /
-`spatial`); warmth picks within. Use `recommend[0]` as the default style
+`glass-hud` / `spatial`); warmth picks within (warm/neutral talking-head →
+`glass-hud`). Use `recommend[0]` as the default style
 (mark it 推荐 in the question, or apply directly when the user pre-approved
 defaults). Always overridable by the user's explicit pick.
 

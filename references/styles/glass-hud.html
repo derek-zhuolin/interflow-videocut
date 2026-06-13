@@ -1,0 +1,256 @@
+<!--
+  Style: glass-hud (暖玻 HUD · warm frosted-glass heads-up display over live video)
+  ─────────────────────────────────────────────────────────────────────
+  身份：**口播专用**的玻璃 HUD。玻璃面板**浮在真人视频上**（半透明暖中性磨砂玻璃，
+  让视频从玻璃后透出），terracotta 橙做唯一 accent，英文小标用等宽（mono）。
+  与 `glass` 的区别：glass 是「整屏冷蓝渐变满屏卡」（自带不透明背景，盖住画面）；
+  glass-hud 是「**透明叠加**」——视频是主角、人脸居中，玻璃面板只占上半左侧，
+  顶部一条章节进度条、底部一条进度轴 + 双语字幕，做出克制的「上下框住人脸」结构。
+  关键词：口播叠加、暖玻璃、章节条、双语字幕、terracotta、HUD、护城河式枚举。
+
+  Tokens（暖中性 + terracotta）
+    accent     #E0894A   (terracotta 橙 —— 唯一 accent：序号/激活章节/进度填充)
+    accent-dp  #C9743A   (深一档，进度条已走过段 / hover)
+    ink        #F4F0EA   (主文字：暖白)
+    ink-dim    rgba(244,240,234,.56)
+    ink-faint  rgba(244,240,234,.32)
+    glass      rgba(26,24,26,.42)     (暖中性深玻璃底 —— 暗+暖视频上最稳，比纯白玻璃可读)
+    glass-edge rgba(255,255,255,.16)  (玻璃亮边，略暖)
+    （亮视频 / 白天素材：glass 提到 rgba(26,24,26,.55)；暗视频可降到 .36）
+  Fonts
+    title 中文 — 'PingFang SC' / 'LXGW WenKai TC'（heavy）
+    EN 小标/进度/字幕英文 — ui-monospace（等宽，小写或全大写 + 宽字距；skill 不打包
+      mono woff2，系统 mono fallback 已在 terminal 风格验证过安全）
+    item 中文 — 'PingFang SC'（700）
+
+  ── 三个部件，分属两层 ──
+  A. 【玻璃信息面板】= **per-card 内容**（写进 card-host，按 overlay layout 摆位）。
+     就是下面 .panel 那块：kicker 章节名 + 大标题 + EN mono 副标 + 发丝分隔 +
+     编号列表（橙序号 · 左 item · 右对齐 dim 批注）。clone 这个文件即得。
+  B. 【顶部章节条 + 底部进度轴 + 双语字幕】= **composition-level chrome**（常驻整片，
+     不属于单卡）。贴进 composition-shell 的 #stage，配方见下「Composition-level」。
+     底部双语字幕**复用 skill 的 subtitles 机制**（storyboard.subtitles.enabled），
+     只把样式换成这里的 .cap 皮；章节条 + 进度轴是这个风格新增的两层 chrome。
+
+  Composition-level（把这三层 chrome 贴进 composition-shell.html 的 #stage 内，
+  在 #video-wrap 之后、INJECT-CARD-HOSTS 之前；运动遵循全局 Motion 默认）
+  ───────────────────────────────────────────────────────────────────────
+  1) 可读性渐变（必配，否则亮视频上白字糊成一片）——放在 video 与 chrome 之间：
+     <div class="hud-legibility"></div>
+     .hud-legibility{position:absolute;inset:0;pointer-events:none;z-index:2;
+       background:linear-gradient(180deg,rgba(20,16,12,.62)0%,transparent 20%,
+         transparent 52%,rgba(20,16,12,.78)100%);}
+
+  2) 顶部章节条（持久层，z-index:5）—— chapters 由 storyboard 的「分段」生成，
+     每段一个 <i class="seg">，激活/走过段加 .on（橙）。HTML：
+     <div class="hud-chapters" id="hud-chapters">
+       <span class="ch"><i class="seg on"></i>开场</span>
+       <span class="ch"><i class="seg"></i>坑 1–3</span> … 末段 = 当前最高光
+     </div>
+     GSAP：每进入第 k 段的 startSec，点亮前 k 段——
+       CHAPTERS.forEach((c,k)=>{ tl.set(`#hud-chapters .ch:nth-child(${k+1}) .seg`,
+         {className:'seg on'}, c.startSec);
+         tl.set(`#hud-chapters .ch:nth-child(${k+1})`,{color:'var(--accent)'}, c.startSec); });
+     （seg = 每段下方那道短发丝 tick，on 时填 accent；文字同步转暖白→橙。）
+
+  3) 底部进度轴 + 速度徽标（持久层，z-index:5）：
+     <div class="hud-scrub"><span class="fill" id="hud-fill"></span>
+       <span class="knob" id="hud-knob"></span></div>
+     <div class="hud-speed">1.0 <b>▷▷</b></div>
+     GSAP（绑定整片进度，0→满）：
+       tl.fromTo('#hud-fill',{width:'0%'},{width:'100%',duration:compDurationSec,ease:'none'},0);
+       tl.fromTo('#hud-knob',{left:'0%'},{left:'100%',duration:compDurationSec,ease:'none'},0);
+
+  4) 双语字幕（复用 skill subtitles）—— 把渲染出的字幕容器套上 .hud-cap 皮：
+     中文大字白色 + 暗描边（视频上可读），EN mono 小字 dim 紧跟其下。样式见下 .hud-cap。
+
+  Best with
+    layouts: overlay（恒用；视频满屏、面板浮上半左）
+    frames:  clean（章节条/取景已是 chrome，再加边框会脏）
+    content: 口播枚举（N 个坑 / N 条原则 / 护城河式清单）/ 销售·方法论拆解 /
+             「你以为是 A 其实是 B」反转金句 / 暖调车内·室内·人物口播
+    尾卡:    card-cta（accent 改 #E0894A 即同调）
+    自动匹配：auto-style.py 已把 glass-hud 列入 dark·warm / dark·neutral 候选
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>style · glass-hud (暖玻 HUD · 口播玻璃叠加)</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #14100c;
+               font-family: ui-sans-serif, system-ui, sans-serif; }
+  .stage { position: relative; width: 1920px; height: 1080px;
+           transform-origin: top left; transform: scale(0.5); overflow: hidden; }
+  /* DEMO ONLY: 伪造一段暖调室内口播视频，让磨砂玻璃有东西可透。
+     真实合成里这层就是 #video-wrap（真视频），删掉本块即可。 */
+  .faux-video { position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(120% 80% at 50% 120%, rgba(20,14,8,.0) 0%, rgba(12,9,6,.9) 100%),
+      radial-gradient(46% 40% at 50% 62%, rgba(214,170,138,.55) 0%, rgba(120,86,60,0) 60%),
+      linear-gradient(180deg, #5e6f54 0%, #6d6a52 22%, #8a7558 46%, #7a5c40 70%, #2c2018 100%);
+  }
+  .faux-video::after { /* 中央人物剪影暗示 */
+    content:''; position:absolute; left:50%; top:46%; width:560px; height:640px;
+    transform:translate(-50%,0);
+    background: radial-gradient(50% 46% at 50% 38%, rgba(46,32,22,.85) 0%, rgba(46,32,22,0) 70%);
+  }
+  .card-host { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 6; }
+  .card-host .card { position: relative; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="faux-video"></div>
+
+<div class="card-host"><div class="card" data-card-id="ref-glass-hud">
+  <style>
+    .card[data-card-id="ref-glass-hud"] .root {
+      --accent: #E0894A; --accent-dp: #C9743A;
+      --ink: #F4F0EA; --ink-dim: rgba(244,240,234,.56); --ink-faint: rgba(244,240,234,.32);
+      --glass: rgba(26,24,26,.42); --glass-edge: rgba(255,255,255,.16);
+      --font-mono: ui-monospace, 'SF Mono', 'Menlo', 'Courier New', monospace;
+      --font-han: 'PingFang SC', 'LXGW WenKai TC', ui-sans-serif, system-ui, sans-serif;
+      width: 100%; height: 100%; position: relative; overflow: hidden;
+      background: transparent;            /* 透明！让视频/伪视频透出 */
+      color: var(--ink); font-family: var(--font-han);
+    }
+    /* 可读性渐变（demo 内置；真实合成里改用 composition 级 .hud-legibility 层） */
+    .card[data-card-id="ref-glass-hud"] .legibility {
+      position: absolute; inset: 0; pointer-events: none; z-index: 1;
+      background: linear-gradient(180deg, rgba(20,16,12,.62) 0%, transparent 20%,
+                  transparent 52%, rgba(20,16,12,.78) 100%);
+    }
+
+    /* ── 顶部章节条 ── */
+    .card[data-card-id="ref-glass-hud"] .chapters {
+      position: absolute; top: 46px; left: 64px; right: 64px; z-index: 5;
+      display: flex; gap: 0;
+      font: 600 22px/1 var(--font-mono); letter-spacing: .04em;
+    }
+    .card[data-card-id="ref-glass-hud"] .chapters .ch {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 16px;
+      color: var(--ink-dim);
+    }
+    .card[data-card-id="ref-glass-hud"] .chapters .ch .seg {
+      width: 78%; height: 3px; border-radius: 3px; background: rgba(244,240,234,.20);
+    }
+    .card[data-card-id="ref-glass-hud"] .chapters .ch.on { color: var(--accent); }
+    .card[data-card-id="ref-glass-hud"] .chapters .ch.on .seg {
+      background: var(--accent); box-shadow: 0 0 14px rgba(224,137,74,.55); }
+
+    /* ── 玻璃信息面板（per-card 主体）── */
+    .card[data-card-id="ref-glass-hud"] .panel {
+      position: absolute; top: 150px; left: 64px; z-index: 4; width: 880px;
+      padding: 54px 60px 60px; border-radius: 30px;
+      background: var(--glass);
+      -webkit-backdrop-filter: blur(28px) saturate(125%);
+      backdrop-filter: blur(28px) saturate(125%);
+      border: 1.5px solid var(--glass-edge);
+      box-shadow: 0 36px 90px rgba(8,6,4,.50),
+                  inset 0 1.5px 0 rgba(255,255,255,.22),
+                  inset 0 0 60px rgba(255,255,255,.03);
+      overflow: hidden;
+    }
+    .card[data-card-id="ref-glass-hud"] .panel::before { /* 顶部柔高光 */
+      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), transparent); pointer-events: none;
+    }
+    .card[data-card-id="ref-glass-hud"] .title {
+      font: 800 92px/1.06 var(--font-han); letter-spacing: -.01em; color: var(--ink);
+      margin: 0; text-shadow: 0 2px 30px rgba(8,6,4,.35);
+    }
+    .card[data-card-id="ref-glass-hud"] .sub-en {
+      margin-top: 14px; font: 500 30px/1 var(--font-mono);
+      letter-spacing: .02em; color: var(--ink-dim); text-transform: lowercase;
+    }
+    .card[data-card-id="ref-glass-hud"] .rule {
+      height: 1.5px; margin: 36px 0 8px; transform-origin: left;
+      background: linear-gradient(90deg, var(--glass-edge), rgba(255,255,255,0)); }
+
+    /* ── 编号列表 ── */
+    .card[data-card-id="ref-glass-hud"] .row {
+      display: flex; align-items: baseline; gap: 26px; padding: 26px 0;
+      border-bottom: 1px solid rgba(244,240,234,.08); }
+    .card[data-card-id="ref-glass-hud"] .row:last-child { border-bottom: 0; }
+    .card[data-card-id="ref-glass-hud"] .row .idx {
+      flex: 0 0 auto; min-width: 30px;
+      font: 700 34px/1 var(--font-mono); color: var(--accent); }
+    .card[data-card-id="ref-glass-hud"] .row .item {
+      flex: 1; font: 700 44px/1.1 var(--font-han); color: var(--ink); letter-spacing: .01em; }
+    .card[data-card-id="ref-glass-hud"] .row .note {
+      flex: 0 0 auto; font: 500 30px/1.2 var(--font-han); color: var(--ink-dim);
+      text-align: right; white-space: nowrap; }
+
+    /* ── 底部双语字幕（demo；真实里复用 skill subtitles 套 .hud-cap 皮）── */
+    .card[data-card-id="ref-glass-hud"] .cap {
+      position: absolute; left: 0; right: 0; bottom: 96px; z-index: 5;
+      text-align: center; }
+    .card[data-card-id="ref-glass-hud"] .cap .zh {
+      font: 800 58px/1.1 var(--font-han); color: #FFFFFF; letter-spacing: .01em;
+      text-shadow: 0 2px 2px rgba(0,0,0,.55), 0 0 24px rgba(0,0,0,.45); }
+    .card[data-card-id="ref-glass-hud"] .cap .en {
+      margin-top: 12px; font: 500 26px/1 var(--font-mono); letter-spacing: .06em;
+      color: rgba(255,255,255,.70); text-transform: lowercase;
+      text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+
+    /* ── 底部进度轴 + 速度徽标 ── */
+    .card[data-card-id="ref-glass-hud"] .scrub {
+      position: absolute; left: 64px; right: 150px; bottom: 52px; z-index: 5;
+      height: 4px; border-radius: 4px; background: rgba(255,255,255,.22); }
+    .card[data-card-id="ref-glass-hud"] .scrub .fill {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 82%;
+      border-radius: 4px; background: #FFFFFF; }
+    .card[data-card-id="ref-glass-hud"] .scrub .knob {
+      position: absolute; left: 82%; top: 50%; width: 18px; height: 18px;
+      margin: -9px 0 0 -9px; border-radius: 50%; background: #FFFFFF;
+      box-shadow: 0 0 0 5px rgba(255,255,255,.18); }
+    .card[data-card-id="ref-glass-hud"] .speed {
+      position: absolute; right: 60px; bottom: 40px; z-index: 5;
+      display: flex; align-items: center; gap: 8px;
+      font: 600 26px/1 var(--font-mono); color: rgba(255,255,255,.85); }
+    .card[data-card-id="ref-glass-hud"] .speed b { color: var(--accent); font-size: 22px; }
+  </style>
+
+  <div class="root">
+    <div class="legibility"></div>
+
+    <div class="chapters">
+      <span class="ch" data-anim="fade-in" data-anim-at="0.10" data-anim-duration="0.5"><i class="seg"></i>开场</span>
+      <span class="ch" data-anim="fade-in" data-anim-at="0.16" data-anim-duration="0.5"><i class="seg"></i>坑 1–3</span>
+      <span class="ch" data-anim="fade-in" data-anim-at="0.22" data-anim-duration="0.5"><i class="seg"></i>坑 4–6</span>
+      <span class="ch" data-anim="fade-in" data-anim-at="0.28" data-anim-duration="0.5"><i class="seg"></i>坑 7–8</span>
+      <span class="ch" data-anim="fade-in" data-anim-at="0.34" data-anim-duration="0.5"><i class="seg"></i>坑 9–10</span>
+      <span class="ch on" data-anim="fade-in" data-anim-at="0.40" data-anim-duration="0.5"><i class="seg"></i>护城河</span>
+    </div>
+
+    <div class="panel" data-anim="settle" data-anim-at="0.45" data-anim-duration="0.8">
+      <h1 class="title" data-anim="slide-in" data-anim-at="0.55" data-anim-duration="0.8"
+          data-anim-from="bottom" data-anim-distance="34">销售的底层</h1>
+      <div class="sub-en" data-anim="fade-in" data-anim-at="0.75" data-anim-duration="0.5">the bottom line</div>
+      <div class="rule" data-anim="grow-x" data-anim-at="0.90" data-anim-duration="0.6" data-anim-target-w="760"></div>
+
+      <div class="row" data-anim="settle" data-anim-at="1.00" data-anim-duration="0.6">
+        <span class="idx">1</span><span class="item">找对的人</span><span class="note">信任 &gt; 话术</span>
+      </div>
+      <div class="row" data-anim="settle" data-anim-at="1.14" data-anim-duration="0.6">
+        <span class="idx">2</span><span class="item">说真诚的话</span><span class="note">诚实 + 善良</span>
+      </div>
+      <div class="row" data-anim="settle" data-anim-at="1.28" data-anim-duration="0.6">
+        <span class="idx">3</span><span class="item">做长远的事</span><span class="note">只卖你真信的</span>
+      </div>
+    </div>
+
+    <div class="cap" data-anim="fade-in" data-anim-at="1.5" data-anim-duration="0.5">
+      <div class="zh">你缺的从来不是话术</div>
+      <div class="en">you never lacked tricks</div>
+    </div>
+
+    <div class="scrub"><span class="fill"></span><span class="knob"></span></div>
+    <div class="speed">1.0 <b>▷▷</b></div>
+  </div>
+</div></div>
+
+</div>
+</body>
+</html>
