@@ -129,6 +129,7 @@ AskUserQuestion({
       //   让用户用 "Other" 直接输入 key；不受限则全部列出。
       // 回"默认 / auto"→ 用 recommendedStyle（auto-style 按明暗冷暖算出的具体 key）。
       options: [
+        { label: "霓虹网格 (neon-grid-hud) · 炸裂档默认", description: "赛博朋克：真人霓虹窗口 + 透视网格地面 + 上升粒子 + HUD 数据读出 + 巨字辉光。**特效永远在人后不糊脸**。科技/发布会预告/短视频高光/强情绪开场——想要『夸张视觉』就选这款。选它后会再问 A/B/C 复杂度档。" },
         { label: "暗夜星河 (nebula-glass) · 旗舰", description: "黑底 + 流动粒子 + 玻璃，最高级最有科技感。产品/科技发布、强情绪开场、想要高级感。" },
         { label: "玻璃拟态 (glass)", description: "两色渐变 + 磨砂玻璃，半透明、干净、高级。品牌叙事 / 金句 / 故事。" },
         { label: "暖玻 HUD (glass-hud)", description: "暖玻璃面板浮在真人口播上 + 顶部章节条 + 底部双语字幕，橙色 accent。口播枚举 / 护城河清单专用（恒 overlay）。" },
@@ -192,6 +193,7 @@ the reply. Bullet-style 1/2/3/4 keeps the reply parseable:
 3) 视觉风格 — 对照桌面总览图 (~/Desktop/interflow-style-gallery/) 报具体风格 (中文名或 key)：
    你报哪一款就锁哪一款，我不会再替你在风格间挑。回"默认"则按源视频明暗冷暖自动匹配。
    ── 暗调（黑底·高级·有动态）──
+   0. 霓虹网格 neon-grid-hud — 赛博真人霓虹窗口+透视网格+粒子+HUD巨字，特效在人后不糊脸（炸裂档默认；选它再问 A/B/C 复杂度）
    1. 暗夜星河 nebula-glass — 黑底粒子+玻璃，最高级最科技（旗舰）
    2. 玻璃拟态 glass       — 两色渐变+磨砂玻璃，干净高级
    3. 暖玻 HUD glass-hud   — 暖玻面板浮口播上+章节条+双语字幕，口播枚举专用
@@ -256,6 +258,49 @@ After the user answers (any channel):
    每个带一句「什么时候用」。中文名 ↔ key 的权威对照见
    `references/DESIGN_INDEX.md` 的「中文风格词库」表；`recommendedStyle`
    也优先用 `auto-style.py` 输出的 `recommend_cn`（中文名）呈现给用户。
+
+   **2a. 复杂度档位（炸裂档专属第二轮问题）** — 当用户选了 `neon-grid-hud`（或任何
+   「炸裂」族风格）时，**紧接着再发一轮 `AskUserQuestion` 问 A/B/C 复杂度档**（这是
+   Derek 要的「问细一点」）。把组件清单写进 description，让用户看清每档叠什么：
+
+   ```
+   AskUserQuestion({ questions: [{
+     question: "复杂度档位？（叠多少特效组件）", header: "复杂度", multiSelect: false,
+     options: [
+       { label: "B 标准 (推荐)", description: "窗口 + 透视网格 + 顶部 HUD 条 + 上升粒子 + 数据 chip×3 + 巨字辉光标题 + 起伏运镜(窗口↔PiP↔全屏)。有信息有节奏，主力款。" },
+       { label: "C 满配炸裂", description: "B 全部 + 扫描线 + 下扫 sweep + 底部跑马 ticker + 音波 EQ + 标题 flicker 闪烁 + 全屏 highlight 拍。镜场、发布、最炸。" },
+       { label: "A 克制", description: "只要窗口 + 透视网格 + 顶部 HUD 条，干净不吵。最接近克制感但换成霓虹调。" }
+     ]
+   }] })
+   ```
+
+   解析：默认 B。A → scene canvas 里 `PN=0`（去粒子）+ 删 `.nb-chips`；C → 在 `#stage`
+   末尾加 `.scanlines`/`.sweep`/`.ticker`（配方见 playground neon-grid-hud.html）+ 给
+   `.nb-h1` 加 `class="flick"`。把选中的档位记进工作记忆，Step 8/9 据此增删组件。
+
+   **2b. neon-grid-hud 强制 layout + frame + 画幅**：选了 neon-grid-hud 就**忽略用户的 layout 选项**，
+   锁定它专属的 **window-scene 布局**（真人竖向霓虹窗口浮在全屏 `#scene` canvas 上，特效在窗口
+   后方/两侧；起伏运镜 = 窗口→PiP→全屏，见风格 fragment 头注释的 videoBounds 表），frame 恒
+   `clean`（霓虹边框已是 chrome）。**画幅默认推 9:16 (1080×1920)**——这套 HUD 是竖向堆栈（窗口 +
+   chip + 巨字），矮画幅（4:5）塞不下两行巨字会被画布底裁字；9:16 垂直预算最足、且源多为竖屏最自然。
+   两条踩过的铁律**务必读风格 fragment 头注释**「满脸窗口铁律」+「垂直预算铁律」段：
+   - **满脸**：窗口必须竖向且比例 ≥ 源比例，否则 cover 只塞进一条横切面只剩上半脸。
+   - **不溢出**：标题用 `clamp()` + `container-type:inline-size` 自动缩；内容 host `overflow:hidden`
+     且底部留 ≥100px 安全边距；排不下就缩窗口/去 chips/降档/上 9:16。**绝不让字贴边或出血。**
+
+   **2c. 整组「炸裂族」可选**：neon-grid-hud 只是炸裂族的旗舰。用户想要「夸张视觉」但 neon
+   不完全对味时，选风格题里可以把整组炸裂族端上来——`cinematic-bloom`（电影光影）/
+   `liquid-aurora`（流光极光）/ `holo-iridescent`（全息虹彩）/ `kinetic-megatype`（动态巨字）/
+   `depth-parallax`（纵深视差）。**它们都走 window-scene 架构**；除 neon 外目前是 playground DNA，
+   **首次被选到时按 `references/styles/playground-gallery/README.md` 的 render-harden checklist
+   加固成确定性版本**（neon-grid-hud 是范本）再渲染。整组定位/原稿/加固清单见该 README +
+   DESIGN_INDEX「炸裂族」表。
+
+   **关于「炸裂档默认」**：当用户预批默认（"auto / 无需询问"）**且**内容是科技/发布/
+   短视频高光/强情绪/个人 IP 预告这类适合炸裂的题材时，`recommendedStyle` 直接取
+   `neon-grid-hud` + B 档（不必等 auto-style.py 的冷暖判定）。auto-style 的冷暖仍可作
+   兜底；但 neon-grid-hud 是 Derek 钦定的炸裂默认。题材明显是数据/报告/严肃时，仍回退
+   到 swiss/minimal 等冷静风格——别硬套霓虹。
 
 3. **Resolve final cardCount** from the density answer:
 

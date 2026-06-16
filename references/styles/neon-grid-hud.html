@@ -1,0 +1,190 @@
+<!--
+  Style: neon-grid-hud (霓虹网格 · 赛博 HUD · 真人窗口 + 特效在后)
+  ═══════════════════════════════════════════════════════════════════════
+  「炸裂档」旗舰风格。一句话定位：**真人是一个霓虹边框的「窗口」，所有夸张特效
+  （透视网格地面 / 地平线辉光 / 上升粒子 / 扫描线 / HUD 数据读出 / 巨字辉光）
+  都在窗口的「后面」和「周围」——所以特效永远不糊脸。**
+
+  ⚠️ 这条「特效在人后」是本风格存在的理由，也是它和 nebula-glass / glass 的根本区别：
+     nebula 把粒子叠在满屏视频「前面」（screen 混合），口播时会糊脸；neon-grid-hud
+     把视频缩成「窗口」，canvas 场景铺满 #stage 在窗口「下面」，窗口不透明压在上方，
+     特效自然落到两侧/后方。要做这种科技/发布会/短视频高光的炸裂感，用这款，不要用
+     nebula 硬叠。
+
+  ─────────────────────────────────────────────────────────────────────
+  ▌架构（三层，从底到顶）
+    Layer 1  scene canvas (#scene)  —— 透视网格 + 地平线亮带 + 上升粒子，
+             composition 级、闭式 draw(t)、GSAP 时间轴 onUpdate 驱动（卡片禁 script）。
+             铺满 #stage、z-index:1、永远是背景。
+    Layer 2  legibility（仅全屏脸卡片淡入）+ horizon-glow（径向霓虹辉光）。
+    Layer 3  真人窗口 (#video-wrap) —— **竖向窗口**，霓虹边框 + 四角 bracket +
+             REC 角标 + 音波 EQ 全写在窗口「内部」，随窗口 window→pip→fullscreen 一起缩放。
+    Layer 4  顶部 HUD 条（brand + signal/rec，常驻）。
+    Layer 5  per-card 内容层 = 本 fragment 的卡片（eyebrow + 数据 chip + 巨字辉光标题 + sub）。
+             每张卡只换这一层文字，窗口和场景持久不变。
+
+  ▌满脸窗口铁律（务必读 —— 踩过的坑）
+    源若是竖屏（手机 9:16，常见 .MOV 带 rotation=-90，先用 ffmpeg 烘焙旋转），
+    窗口必须是**竖向**且**比例 ≥ 源比例**，否则 object-fit:cover 只会塞进一条横切面
+    → 只剩上半张脸。安全做法：窗口比例贴近源比例（9:16 → ~0.5625），居中放上方，
+    场景在两侧露出。object-position 给 50% 32% 居中到脸。**宁可窗口窄一点让场景两侧
+    露出，也不要把脸裁掉。**
+
+  ▌垂直预算铁律（务必读 —— 字被画布底裁掉的坑）
+    这套 HUD 是一个**竖向堆栈**：窗口 + 数据 chip + eyebrow + （可能两行的）巨字标题 + sub。
+    在矮画幅（4:5 = 1350 高）上，窗口一占就 800+，剩下塞不下两行巨字 → 第二行被画布底裁掉。
+    **铁律：**
+    1. **9:16 (1080×1920) 是 window-scene 的首选画幅**（源本来就是竖屏，最自然、垂直预算最足）。
+       Step 7 选了 neon-grid-hud 就**默认推 9:16**；用户坚持 4:5/16:9 时必须按下面 2/3 收紧。
+    2. 标题用 `font-size: clamp(72px, 9.4cqi, 104px)`（peak `clamp(92px,12cqi,132px)`）+
+       `.card-host { container-type: inline-size }` —— 让两行标题在窄画幅自动缩，不硬撑溢出。
+    3. 内容 host 必须 `overflow: hidden` 兜底，且**底部留 ≥ 100px 安全边距**：
+       host.top + 估算内容高（chips 90 + eyebrow 56 + 标题 2 行 ≈ 2×line + sub 56）≤ 画幅高 − 100。
+       排不下就：缩窗口 / 去 chips / 降标题档 / 直接上 9:16。**绝不让任何字贴边或出血。**
+    画幅验证值：
+      9:16  window 600×1040 居中(left 240,top 150)；window-card 内容 host top 1218 height 600（足）。
+      4:5   window 480×760 居中(left 300,top 96)；**必须去 chips**，内容 host top 880 才塞得下两行。
+
+  ▌A/B/C 复杂度档位（选风格后再问一档 —— 见 render-strategy.md 第 2 轮问题）
+    | 档 | 名称 | 组件叠加 | 适用 |
+    |---|---|---|---|
+    | A | 克制 | 窗口 + 透视网格地面 + 顶部 HUD 条 | 日常口播、想干净但要霓虹调 |
+    | B | 标准（默认）| A + 上升粒子 + 数据 chip×3 + 巨字辉光标题 + 起伏运镜(窗口↔PiP↔全屏) | 主力款，有信息有节奏 |
+    | C | 满配炸裂 | B + 扫描线 + 下扫 sweep + 底部跑马 ticker + 音波 EQ + 标题 flicker 闪烁 + 全屏 highlight 拍 | 镜场、发布、最炸 |
+    本 fragment 默认演示 B 档。降到 A：删 .nb-chips + 粒子（scene 里 PN=0）。升到 C：
+    在 #stage 末尾加 .scanlines / .sweep / .ticker（配方见 playground neon-grid-hud.html），
+    给 .nb-h1 加 class="flick"，窗口内保留 .win-wave EQ。
+
+  ▌配色 tokens
+    bg        #03040a（赛博深空黑）/ #stage 径向 #0a1230→#060819→#020308
+    cyan      #00fff0（主霓虹：边框/网格/标题辉光/品牌）
+    magenta   #ff2db4 / #ff45c0（副霓虹：REC/eyebrow/标题 accent/粒子）
+    ice-blue  #7fd4ff（sub 英文）
+    grid      cyan→magenta 渐变线 + 地平线亮带
+  ▌字体  'Inter' / 'PingFang SC' 800（巨字），ui-monospace（HUD/eyebrow/sub）
+
+  ▌Composition-level scene canvas（粘贴进 index.html 的 GSAP <script>，确定性闭式 draw(t)）
+    1) #stage 第一个子元素放：<canvas id="scene" width="W" height="H"></canvas>（W×H=画幅）
+    2) GSAP <script> 里加入（tl=master timeline，DUR=composition.durationSeconds）：
+
+    ```js
+    (function(){
+      var cv=document.getElementById('scene'); if(!cv) return;
+      var ctx=cv.getContext('2d'), W=cv.width, H=cv.height, horizonY=H*0.58, vpx=W/2;
+      function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+      var rnd=mulberry32(0x51ED2718), rand=function(a,b){return a+(b-a)*rnd();};
+      var PN=30,PT=[];                         // ← B 档 30 粒；A 档设 PN=0；C 档 ~46
+      for(var i=0;i<PN;i++) PT.push({x:rand(0.04,0.96)*W,baseY:rand(0.30,1.0)*H,range:rand(260,520),
+        cycle:rand(6,13),phase:rand(0,1),sw:rand(0.4,1.1),drift:rand(6,20),sz:rand(2,4),mag:rnd()>0.5,br:rand(0.55,1.0)});
+      function draw(tt){
+        ctx.clearRect(0,0,W,H);
+        ctx.lineWidth=1.4;                     // 纵向透视线 → 灭点
+        for(var i=-14;i<=14;i++){var spread=i*78,x0=vpx+spread*3.4,g=ctx.createLinearGradient(0,horizonY,0,H);
+          g.addColorStop(0,'rgba(0,255,240,0)');g.addColorStop(.5,'rgba(0,220,255,0.32)');g.addColorStop(1,'rgba(255,45,180,0.5)');
+          ctx.strokeStyle=g;ctx.beginPath();ctx.moveTo(vpx+spread*0.06,horizonY);ctx.lineTo(x0,H);ctx.stroke();}
+        var phase=(tt*0.10)%1;                 // 横向推进线（相位取自时间）
+        for(var k=0;k<26;k++){var z=(k+phase)/26,ease=z*z,y=horizonY+ease*(H-horizonY);if(y<horizonY)continue;
+          var alpha=Math.min(1,ease*1.6)*0.5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);
+          ctx.strokeStyle='rgba(0,235,255,'+alpha+')';ctx.lineWidth=0.6+ease*1.8;
+          ctx.shadowColor='rgba(0,255,240,0.6)';ctx.shadowBlur=ease*8;ctx.stroke();ctx.shadowBlur=0;}
+        var hg=ctx.createLinearGradient(0,horizonY-3,0,horizonY+3);  // 地平线亮带
+        hg.addColorStop(0,'rgba(0,255,240,0)');hg.addColorStop(.5,'rgba(120,255,255,0.85)');hg.addColorStop(1,'rgba(0,255,240,0)');
+        ctx.fillStyle=hg;ctx.fillRect(0,horizonY-2,W,4);
+        ctx.globalCompositeOperation='lighter';                     // 上升粒子
+        for(var j=0;j<PN;j++){var p=PT[j],frac=((tt/p.cycle)+p.phase)%1,y2=p.baseY-frac*p.range,
+          x2=p.x+Math.sin(tt*p.sw+p.phase*6.28)*p.drift,a=Math.sin(frac*Math.PI)*p.br;if(a<=0.01)continue;
+          var col=p.mag?'255,92,196':'0,255,240';ctx.fillStyle='rgba('+col+','+a+')';
+          ctx.shadowColor='rgba('+col+',0.9)';ctx.shadowBlur=8;ctx.beginPath();ctx.arc(x2,y2,p.sz,0,6.2832);ctx.fill();}
+        ctx.shadowBlur=0;ctx.globalCompositeOperation='source-over';
+      }
+      var clock={t:0};
+      tl.to(clock,{t:DUR,duration:DUR,ease:'none',onUpdate:function(){draw(clock.t);}},0);
+      draw(0);
+    })();
+    ```
+    要点：draw(tt) 必须纯 f(tt)（随机只在 mulberry32 初始化用一次），不要 rAF / Math.random / Date.now，
+    这样 hyperframes 确定性 seek 捕获才能逐帧复现。
+
+  ▌窗口状态 videoBounds（#video-wrap，起伏运镜 window→pip→fullscreen）—— 9:16 (1080×1920) 首选·验证值
+    WINDOW   {left:240, top:150, width:600, height:1040} class 'video-wrapper'      （满脸竖窗）
+    PIP      {left:740, top:150, width:300, height:512}  class 'video-wrapper pip'  （右上角竖向 pill）
+    FULL     {left:0,   top:0,   width:1080, height:1920} class 'video-wrapper full' （全屏脸，配 legibility 淡入）
+    内容 host：window-card top 1218 height 600；peak top 780 height 840；CTA(全屏) 底部 top 1480。
+    4:5 (1080×1350)：WINDOW {left:300,top:96,width:480,height:760}；**去 chips** 才塞得下两行标题。
+    16:9 (1920×1080)：源若竖屏，WINDOW 居中竖窗 {left:660,top:60,width:600,height:960}；FULL 满屏。
+    起伏：peak 卡把窗口缩 PIP 让场景炸开；CTA 卡把窗口放 FULL 给亲密收尾。
+
+  Best with
+    layout: window-scene（本风格专属 —— 真人窗口浮在全屏 canvas 场景上，特效在后）
+    frame:  clean（霓虹边框已是 chrome，忌再加装饰边框）
+    content: 短视频高光 / 产品·科技发布 / 发布会预告 / AI 话题 / 强情绪开场 / 个人 IP 预告
+    尾卡:    card-cta 重新着色为 cyan/magenta 霓虹（保留动画 rig，配色见本风格 tokens）
+    变体:    把 cyan 主调换成别的霓虹（紫 #b14bff / 绿 #39ff88）即得同骨架的撞色变体
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>style · neon-grid-hud (霓虹网格 · 赛博 HUD · 真人窗口)</title>
+<style>
+  /* 预览外壳：1080×1350 缩 0.5，黑底 + 烘焙静态网格占位（生产环境由 #scene canvas 取代）。 */
+  html, body { margin:0; padding:0; background:#03040a; font-family:ui-sans-serif,system-ui,sans-serif; }
+  .stage { position:relative; width:1080px; height:1350px; transform-origin:top left; transform:scale(0.5);
+           overflow:hidden;
+           background:
+             radial-gradient(ellipse 120% 80% at 50% 16%, #0a1230 0%, #060819 46%, #020308 100%),
+             repeating-linear-gradient(0deg, transparent 0 30px, rgba(0,235,255,.05) 30px 31px); }
+  .card-host { position:absolute; left:60px; top:940px; width:960px; height:356px; }
+</style>
+</head>
+<body>
+<div class="stage"><div class="card-host">
+
+<div class="card" data-card-id="ref-neon-grid-hud">
+  <style>
+    /* per-card 内容层（eyebrow + chips + 巨字辉光标题 + sub）。窗口/场景/HUD 条是 composition 级。 */
+    .card[data-card-id="ref-neon-grid-hud"] .root {
+      --cyan:#00fff0; --mag:#ff2db4; --mag2:#ff45c0; --ice:#7fd4ff;
+      --font-sans:'Inter','PingFang SC',ui-sans-serif,sans-serif; --font-mono:'Inter',ui-monospace,monospace;
+      width:100%; height:100%; position:relative; overflow:hidden; box-sizing:border-box;
+      background:transparent; color:#eafcff; font-family:var(--font-sans);
+      display:flex; flex-direction:column; justify-content:flex-start;
+    }
+    .card[data-card-id="ref-neon-grid-hud"] .nb-chips { display:flex; gap:14px; margin-bottom:26px; }
+    .card[data-card-id="ref-neon-grid-hud"] .nb-chip { flex:1; padding:13px 16px; border-radius:13px;
+      background:rgba(8,18,42,.6); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+      border:1px solid rgba(0,255,240,.3); box-shadow:0 0 16px rgba(0,255,240,.12), inset 0 0 18px rgba(0,30,60,.4);
+      font-family:var(--font-mono); }
+    .card[data-card-id="ref-neon-grid-hud"] .nb-chip .k { font-size:13px; letter-spacing:2px; color:#6f8fc8; }
+    .card[data-card-id="ref-neon-grid-hud"] .nb-chip .v { font-size:27px; font-weight:700; color:var(--cyan);
+      text-shadow:0 0 12px rgba(0,255,240,.7); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .card[data-card-id="ref-neon-grid-hud"] .nb-chip.mag .v { color:#ff5cc4; text-shadow:0 0 12px rgba(255,92,196,.7); }
+    .card[data-card-id="ref-neon-grid-hud"] .nb-eyebrow { font-family:var(--font-mono); font-size:20px;
+      letter-spacing:8px; color:var(--mag); text-shadow:0 0 12px rgba(255,45,180,.7); margin-bottom:16px; }
+    .card[data-card-id="ref-neon-grid-hud"] .nb-h1 { font-size:104px; line-height:1.04; font-weight:800;
+      letter-spacing:-1px; color:#eafcff; overflow-wrap:anywhere; text-wrap:balance; max-width:100%;
+      text-shadow:0 0 8px rgba(0,255,240,.9), 0 0 28px rgba(0,255,240,.5), 0 0 60px rgba(0,160,255,.4); }
+    .card[data-card-id="ref-neon-grid-hud"] .nb-h1 .accent { color:var(--mag2);
+      text-shadow:0 0 10px rgba(255,69,192,.9), 0 0 36px rgba(255,69,192,.55); }
+    /* C 档加 class="flick" 启用标题电子闪烁 */
+    .card[data-card-id="ref-neon-grid-hud"] .nb-h1.flick { animation:nbFlick 6s linear infinite; }
+    @keyframes nbFlick { 0%,100%{opacity:1} 47%{opacity:1} 48%{opacity:.84} 49%{opacity:1} 91%{opacity:1} 92%{opacity:.72} 93%{opacity:1} }
+    .card[data-card-id="ref-neon-grid-hud"] .nb-sub { margin-top:18px; font-family:var(--font-mono);
+      font-size:28px; letter-spacing:5px; color:var(--ice); text-transform:lowercase; text-shadow:0 0 10px rgba(0,180,255,.6); }
+  </style>
+
+  <div class="root">
+    <div class="nb-chips">
+      <div class="nb-chip" data-anim="fade-in" data-anim-at="0.20" data-anim-duration="0.5"><div class="k">TOPIC</div><div class="v">口播 · AI</div></div>
+      <div class="nb-chip mag" data-anim="fade-in" data-anim-at="0.28" data-anim-duration="0.5"><div class="k">WHEN</div><div class="v">本周四</div></div>
+      <div class="nb-chip" data-anim="fade-in" data-anim-at="0.36" data-anim-duration="0.5"><div class="k">SIGNAL</div><div class="v">98%</div></div>
+    </div>
+    <div class="nb-eyebrow" data-anim="fade-in" data-anim-at="0.30" data-anim-duration="0.5">// FIELD RECORDING</div>
+    <h1 class="nb-h1" data-anim="settle" data-anim-at="0.42" data-anim-duration="0.7">大家好，<span class="accent">我是卓霖</span></h1>
+    <div class="nb-sub" data-anim="fade-in" data-anim-at="0.75" data-anim-duration="0.5">interflow · ai studio</div>
+  </div>
+</div>
+
+</div></div>
+</body>
+</html>

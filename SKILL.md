@@ -5,28 +5,21 @@ description: Turn a local talking-head / 口播 video into metadata, transcript,
 
 # Interflow Video Cut — 口播成片 Workflow
 
-Interflow Video Cut converts a local input video into a card-based composition. The agent
-designs the cards (timing + content), then assembles a single composition HTML and renders
-it to MP4 via `hyperframes`.
+Interflow Video Cut converts a local video into a card-based composition: the
+agent designs the cards (timing + content), assembles one composition HTML, and
+renders it to MP4 via `hyperframes`.
 
-**Default authoring mode: clone-and-fill, not free-design.** For each card,
-**start from a shipped reference fragment** (`references/styles/<key>.html`) and
-**swap only the text + accent** — this is the fast path and it keeps every card
-at the curated quality floor. Hand-authoring a card from scratch is the
-**exception**, reserved for content that genuinely doesn't fit any reference.
+**Default authoring mode: clone-and-fill, not free-design.** Per card, start from
+a shipped fragment (`references/styles/<key>.html`) and **swap only text +
+accent** — the fast path that holds every card at the curated quality floor.
+Hand-authoring from scratch is the **exception**, only when content fits no reference.
 
 ## CLI Resolution
 
-```bash
-# interflow-video-cut uses the vtake CLI (notedit) under the hood — auto-downloaded from npm on first run
-VTAKE="npx -y @interflow/notedit@latest"  # or set VTAKE to a local checkout's bin
-# hyperframes — for rendering the assembled HTML to MP4
-HYPERFRAMES="npx -y hyperframes@latest"
-```
-
-`SKILL_DIR` is the absolute path to this skill's directory (the host injects it
-as "Base directory for this skill: …"). All `references/...` and `scripts/...`
-paths below are relative to it.
+`vtake` CLI (`npx -y @notedit/vtake@latest`) handles extract/transcribe;
+`hyperframes` (`npx -y hyperframes@latest`) renders. Both auto-download from npm.
+`SKILL_DIR` = this skill's dir (host injects it as "Base directory for this
+skill: …"); all `references/…` + `scripts/…` paths are relative to it.
 
 ## Reference Map — read the right file at the right step
 
@@ -41,8 +34,8 @@ from the library, don't reinvent.
 | `references/composition-assembly.md` | **Step 9 reference detail** — GSAP statement cheat sheet, timing validation, video framing reference, HyperFrames QA rules, hard-won gotchas, the fixed card-cta GSAP block | Step 9 |
 | `references/composition-shell.html` | the STATIC composition scaffold you `cp` and fill (do NOT retype it) | Step 9 |
 | `references/editorial-print-montage.md` | the multi-asset montage kit for the `editorial-print` style (5 layout primitives, 3 transitions, asset staging, woven vs standalone modes) | when style = editorial-print |
-| `references/styles/*.html` | 11 self-contained style fragments — **clone these** | Step 8 |
-| `references/layouts/*.html` | 6 layout skeletons (videoBounds + cardBounds for landscape/portrait) | Step 7 / 9 |
+| `references/styles/*.html` | self-contained style fragments — **clone these**; includes the 炸裂族 (neon-grid-hud / liquid-aurora / holo-iridescent + playground-gallery DNA) | Step 7 / 8 |
+| `references/layouts/*.html` | layout skeletons (videoBounds + cardBounds, landscape/portrait); neon-grid-hud carries its own window-scene | Step 7 / 9 |
 | `references/frames/*.html` | 3 frame chrome fragments (clean / hairline / polaroid) | Step 9 |
 
 ## Workflow
@@ -63,11 +56,9 @@ Required:
 
 Optional:
 
-- `ELEVEN_API_KEY` — when set, `vtake transcribe` connects to ElevenLabs
-  directly and bypasses the rate-limited proxy. When **not** set, it falls
-  back to `https://vtake.app/api/transcribe`, which enforces **3 requests
-  per minute per IP**. Override the proxy URL with
-  `VTAKE_TRANSCRIBE_ENDPOINT` (e.g. for local Wrangler dev).
+- `ELEVEN_API_KEY` — set → `vtake transcribe` hits ElevenLabs directly (no rate
+  limit). Unset → proxy `https://vtake.app/api/transcribe` (**3 req/min/IP**;
+  override via `VTAKE_TRANSCRIBE_ENDPOINT`).
 
 Strongly recommended on macOS for `hyperframes render`:
 
@@ -178,41 +169,27 @@ the composition you author in Step 9:
 | `archetype` (optional) | string | free-form label you may attach to remember a card's pattern; absent = free-form, which is the default |
 | `transition` (optional) | enum: `cut` \| `fade` \| `slide` \| `wipe` | declarative card-to-card transition |
 
-**Five `zone` values:**
+**Five `zone` values** (resolve to card-host pixel bounds in Step 9; full bounds
+table in `references/composition-assembly.md`): `fullscreen` (whole canvas —
+hero / big numbers) · `whiteboard-area` (40px inset or portrait bottom-45% —
+dense data) · `lower-third` (bottom 30% — annotate over video) · `side-panel`
+(landscape right-42% / portrait bottom-40% — data beside video) · `video-overlay`
+(full canvas, mostly-transparent card — overlay on full-bleed video). Video
+bounds are set **once** (`videoTrack.bounds`); "moving" video between cards =
+GSAP tweens on `#video-wrap` (Step 9).
 
-| zone | resolved bounds | when to use |
-|---|---|---|
-| `fullscreen` | covers whole canvas | hero moments, big numbers, mantras |
-| `whiteboard-area` | inset 40px margin (or 45% of portrait height) | dense data / annotated content |
-| `lower-third` | bottom 30% band | annotation over visible video |
-| `side-panel` | right 42% (landscape) or bottom 40% (portrait) | data side, video other side |
-| `video-overlay` | full canvas, expects mostly-transparent card | annotation overlays on full-bleed video |
+**No prescribed roles or arc** — cards emerge from what the video says (all
+quotes, all data, open on a number or a story; let the transcript drive).
 
-When you assemble the composition in Step 9, resolve each card's `zone`
-into pixel bounds on the card-host wrapper following the table above.
-Video bounds are set **once** at composition level (`videoTrack.bounds`);
-to make video appear to "move between cards", author GSAP tweens against
-`#video-wrap` in the composition's `<script>` (see Step 9).
-
-**No prescribed card roles, no prescribed narrative arc.** Cards emerge
-from what the video actually says — could be all quotes or all data,
-could open with a number or with a story. Let the transcript drive the
-rhythm.
-
-**Where do card boundaries fall? — one intent per card.** "Let the
-transcript drive" is not "cut anywhere". A card boundary belongs where the
-speaker *pivots to a new idea*. Mark a boundary at any of these signals —
-then a card spans the stretch between two boundaries:
-
-- **Topic shift** — "OK, that's the problem. Now, here's what actually works…": a new card starts at "Now".
-- **Argument unit** — a setup → proof → payoff that runs >~20s is 2–3 cards (one per move), not one crammed card.
-- **Distinct claim / number / comparison** — each gets its own card. Avoid "data-dump" cards that pile 4+ facts into one.
-- **Emphasis / repetition** — a repeated phrase, rhetorical question, or "this is the key point" is an anchor: make it its own beat.
-- **Shot change** (if visible) — face-to-camera → screen-share → prop is a natural boundary too.
-
-The duration+density math below sets *how many* cards; these signals set
-*where they land*. If the two disagree, trust the intents — never split one
-idea across two cards or fuse two ideas to hit a number.
+**Card boundaries — one intent per card** ("let the transcript drive" ≠ "cut
+anywhere"). A boundary belongs where the speaker *pivots to a new idea*; a card
+spans the stretch between two boundaries. Signals: **topic shift** ("…now here's
+what works" = new card) · **argument unit** (a setup→proof→payoff >~20s = 2–3
+cards, one per move) · **distinct claim/number/comparison** (each its own card,
+no 4-facts data-dump) · **emphasis/repetition** (repeated phrase / "the key
+point" = its own beat) · **shot change** (face→screen-share→prop). The math
+below sets *how many*; these set *where*. Disagree → trust the intents; never
+split one idea or fuse two to hit a number.
 
 **How many takeaways? — auto-infer from duration + density.** No fixed
 upper limit. Floor is fixed: **minimum 5 cards**.
@@ -238,54 +215,32 @@ cardCount = max(5, round(videoSec / (basePace × densityMultiplier)))
 Always sanity-check against content: the math gives a starting count, but the
 actual intents decide the final count.
 
-**Speaker presence — keep the talking head on screen.** Unless the user wants a
-faceless explainer, the source video (the speaker) is on screen for most of the
-film — cards annotate and amplify, they don't replace. Practical default:
-full-bleed or large-PIP speaker on the opening and closing cards, at least a
-small PIP or side-panel on cards where the speaker makes a personal point.
-Data-heavy cards can go full-card briefly.
+**Speaker presence — keep the talking head on screen** (unless the user wants a
+faceless explainer): cards annotate, they don't replace. Default = full-bleed/
+large-PIP speaker on opening + closing cards, ≥ small PIP/side-panel where the
+speaker makes a personal point; data-heavy cards can go full-card briefly.
 
-**Distill, don't transcribe — a card is information design.** The single biggest
-quality failure is pasting a spoken sentence onto a card. A card headline is a
-*rewrite*: same meaning, a third of the words, the point surfaced. Run every
-card's `content` through this gate:
-
-1. **One intent, one sentence.** Can't state the point in one short line → it's two ideas, split it.
-2. **Headline ≠ the quote.** Rewrite the spoken sentence into a ~14-char title; demote the explanation to a small detail line.
-3. **No two cards make the same point.** Scan the storyboard; if two overlap, merge or reframe one.
-4. **Shape follows content.** Comparison → two-column / delta; number → one big figure + label; list → stacked rows; quote → large centered text.
-
-Failure smell (reject and rewrite): a `title` longer than ~14 Chinese chars, a
-`detail` that's a verbatim transcript clause, or a card that's just "the next
-sentence" rather than "the next idea".
+**Distill, don't transcribe — a card is information design.** The #1 failure is
+pasting a spoken sentence onto a card; a headline is a *rewrite* (same meaning,
+⅓ the words, point surfaced). Gate every card: (1) **one intent, one sentence**
+— can't → split; (2) **headline ≠ quote** — ~14-char title, demote the
+explanation to a small detail line; (3) **no two cards make the same point** —
+merge/reframe overlaps; (4) **shape follows content** — comparison→two-column,
+number→big figure+label, list→stacked rows, quote→large centered. Reject &
+rewrite if: `title` > ~14 中文字, `detail` is a verbatim clause, or the card is
+"the next sentence" not "the next idea".
 
 **Final card — append a customizable brand outro (`card-cta`).** After all
-content cards, append one outro card to the `cards` array, and extend
-`composition.durationSeconds` by ~3.5s to match its `endSec` (the tail is a
-pure-graphic sign-off with no video behind it):
-
-```json
-{
-  "id": "card-cta",
-  "intent": "Customizable brand / sign-off outro",
-  "startSec": <last content card's endSec>,
-  "endSec":   <last content card's endSec + 3.5>,
-  "accentIndex": 3,
-  "zone": "fullscreen",
-  "contentHints": {
-    "recap":   "<one line echoing the video's core takeaway / payoff — the content beat>",
-    "purpose": "<one human line: what the brand/club is and what it's for>"
-  }
-}
-```
-
-Outro rules (the full template + entrance choreography are in
-`references/card-contract.md`):
-
-- **Lead with a recap / payoff line** rewritten from what the video actually said — that's the content beat that makes the ending *earned*, not a bolted-on logo flash.
-- **Carry a one-line purpose / 延伸 under the wordmark** (e.g. `让每个想法，都有更好的呈现`). Drop `.purpose` only if the recap already says it — don't stack redundant copy.
-- **Follow the same visual language as the rest of the video.** The shipped `card-cta` is a *dark* "Editorial Cinema" card; for any other style, re-theme it (reuse the composition's `--bg`/`--ink`/`--accent-0`, swap mark/wordmark/tagline) — keep the entrance choreography, only swap colors + content. A clashing fixed outro is a defect.
-- **It's the Interflow club sign-off, not a hard sell.** Ships branded `Interflow` + `Interflow AI 出品`. For an outside creator, swap or drop the brand. A follow nudge is fine only if the creator wants it — don't force a "立即购买" CTA. **Strip AI-jargon** (公开孵化 / 赋能 / 闭环 / leverage / synergy) — use plain human phrasing. When unsure of wording, propose 2–3 options before rendering.
+content cards, append one `fullscreen` outro card (`contentHints`: `recap` +
+`purpose`) and extend `composition.durationSeconds` by ~3.5s to match its
+`endSec`. Lead with a **recap / payoff line rewritten from what the video said**
+(the earned content beat, not a logo flash) + a one-line **purpose / 延伸** under
+the wordmark. **Re-theme it to the composition's style** (reuse `--bg`/`--ink`/
+`--accent-0`, swap mark/wordmark/tagline; keep the entrance choreography) — a
+clashing fixed outro is a defect. Ships the Interflow club sign-off (`Interflow`
++ `Interflow AI 出品`); for an outside creator swap/drop the brand, no hard-sell
+CTA, **strip AI-jargon** (赋能/闭环/leverage…). Full template + JSON + entrance
+choreography: `references/card-contract.md`.
 
 ### 7. Decide Render Strategy
 
@@ -355,10 +310,9 @@ ln -f "$VIDEO_PATH" "$WORK_DIR/public/input-video.mp4" 2>/dev/null \
   || cp "$VIDEO_PATH" "$WORK_DIR/public/input-video.mp4"
 ```
 
-**Then fill the shell — do not regenerate it.** `index.html` is now the copied
-`references/composition-shell.html` (which already contains the `#stage` /
-`#video-wrap` / card-host structure, the `@font-face` blocks, and the GSAP
-runtime). Edit only these slots:
+**Then fill the shell — do not regenerate it.** `index.html` is the copied
+`composition-shell.html` (already has `#stage` / `#video-wrap` / card-host
+structure + `@font-face` + GSAP runtime). Edit only these slots:
 
 1. **The 6 `{{...}}` tokens** at the top: `{{BG}}` `{{TEXT}}` `{{ACCENT_0..4}}`
    (from the chosen `themeId` palette), `{{DURATION}}` (= `composition.durationSeconds`),
@@ -377,23 +331,17 @@ runtime). Edit only these slots:
    python3 "$SKILL_DIR/scripts/build-timeline.py" --work "$WORK_DIR"   # add --slip 0.55 to tune
    ```
 
-   It is **idempotent** — re-run it after editing any card HTML or the
-   storyboard, and it re-injects between its own `BEGIN/END` sentinels. What it
-   leaves to you: **video `#video-wrap` reframes** for multi-layout / dynamic
-   (起伏运镜) rhythm — opt in per card by adding
-   `"videoBounds": { "left":…, "top":…, "width":…, "height":… }` to that card in
-   `storyboard.json` before running the script, and it emits the reframe tween at
-   that card's slip point. Add `"videoClass": "video-wrapper pip"` (or any chrome
-   class) alongside it when the reframe needs a different look. Cards without
-   `videoBounds` keep the video where it was (the calm fixed-rhythm default). Run
-   `build-timeline.py` AFTER Step 8 (cards must exist) and AFTER the `sed` token
-   fill. Read its stderr timing warnings — they mean the storyboard needs fixing.
+   **Idempotent** — re-run after editing any card / the storyboard; it re-injects
+   between its `BEGIN/END` sentinels. Run it AFTER Step 8 (cards exist) and AFTER
+   the `sed` fill; read its stderr timing warnings. What it leaves to you:
+   **`#video-wrap` reframes** for dynamic (起伏运镜) rhythm — add
+   `"videoBounds": {left,top,width,height}` (+ optional `"videoClass": "video-wrapper pip"`)
+   to a card in `storyboard.json` and it emits the reframe tween at that card's
+   slip; cards without `videoBounds` keep the video put (calm default).
 
-> **Hand-authoring the timeline is the exception.** Only edit the generated
-> region directly for a genuinely one-off motion the cheat sheet can't express —
-> and then stop re-running the script (it would overwrite your edit). For
-> everything normal, declare motion as `data-anim-*` attributes (Step 8) and let
-> the generator compile them.
+> **Hand-authoring the timeline is the exception** — only for a one-off motion the
+> cheat sheet can't express (then stop re-running the script, it overwrites). Else
+> declare motion as `data-anim-*` (Step 8) and let the generator compile it.
 
 **→ The Step 9 reference detail — the GSAP statement cheat sheet, card-timing
 validation (overlap is intentional), the video framing reference per layout, the
@@ -403,11 +351,9 @@ assembling), and the fixed card-cta GSAP block — is in
 
 ### 10. Preview & Iterate FIRST — do NOT render to review
 
-**Rendering is for the final export, never for review.** A full render
-takes ~1–2 min; using it as the feedback loop wastes minutes per change.
-Instead, after assembling `index.html`, start the live studio and let the
-user review there — it opens instantly, plays in real time, scrubs the
-timeline, and **hot-reloads on every edit**.
+**Rendering is for the final export, never for review** (a full render is
+~1–2 min). After assembling `index.html`, start the live studio for review — it
+opens instantly, plays/scrubs in real time, and **hot-reloads on every edit**.
 
 ```bash
 cd "$WORK_DIR"
@@ -434,14 +380,10 @@ For YOUR OWN spot-checks during building, use single-frame snapshots
 npx hyperframes snapshot public --at 5 --describe false   # writes public/snapshots/frame-…png
 ```
 
-> `--describe` is hyperframes' built-in Gemini vision QA — it runs **by
-> default** and prints `GEMINI_API_KEY not set, skipping` on every frame
-> when no key is set. Pass `--describe false` to silence it (this project
-> doesn't use Gemini). To read the frames back, glob the **real** output
-> path `public/snapshots/frame-*.png` — never `snap-*.png`. Under zsh an
-> unmatched glob is a hard error (`nomatch` → exit 1), so a wrong pattern
-> kills the whole command; if a snapshot loop might match nothing, guard
-> with `setopt +o nomatch` or test the path first.
+> Pass `--describe false` to silence the built-in Gemini QA (prints
+> `GEMINI_API_KEY not set, skipping` otherwise). Frames write to the **real**
+> path `public/snapshots/frame-*.png` (not `snap-*.png`). Under zsh an unmatched
+> glob hard-errors (`nomatch` → exit 1) — guard loops with `setopt +o nomatch`.
 
 Manage preview servers: `hyperframes preview --list` /
 `hyperframes preview --kill-all`.
@@ -472,15 +414,7 @@ npx hyperframes snapshot public --at 5 --out snapshot-5s.png --describe false
 
 ### 12. Report Results
 
-Tell the user:
-
-- Work directory path
-- `storyboard.json` (the card outline you designed)
-- `public/cards/*.html` (one HTML per card)
-- `public/index.html` (the assembled composition)
-- `output.mp4` (the final video)
-- ASR provider used
-- Card count + how you chose them (in 1 sentence)
-- Any missing keys or quality caveats
-
-Do not delete the work directory unless the user asks.
+Tell the user: work dir path · key artifacts (`storyboard.json`,
+`public/cards/*.html`, `public/index.html`, `output.mp4`) · ASR provider · card
+count + how you chose them (1 sentence) · any missing keys / quality caveats.
+Don't delete the work directory unless asked.

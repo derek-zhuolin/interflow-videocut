@@ -1,0 +1,137 @@
+<!--
+  Style: liquid-aurora (流光极光 · 流动液态极光 · 真人窗口 + 极光在后)
+  ═══════════════════════════════════════════════════════════════════════
+  「炸裂族」之一，2026-06 从 playground 加固成生产级。定位：流动的液态极光在玻璃
+  窗口后面缓缓涌动——丝滑、梦幻、高级感/情绪/品牌/治愈。冷蓝→紫→青→品红的极光带
+  叠加飘动，玻璃面板浮在前面。
+
+  ▌架构 = window-scene（与 neon-grid-hud 同一套，特效在人后永不糊脸）
+    场景层 = aurora canvas (#aurora) 铺满 #stage 最底 → 真人窗口 #video-wrap → 玻璃内容层(per-card)。
+    **window-scene 的三态 videoBounds（window→pip→fullscreen）、满脸窗口铁律、垂直预算/不溢出
+    铁律、9:16 首选 —— 全部沿用 `neon-grid-hud.html` 头注释，不在此重复。** 本文件只给本风格的
+    背景配方 + 内容层皮。frame 恒 clean。
+
+  ▌render-harden（从 playground 原稿改了什么 —— 见 playground-gallery/liquid-aurora.html）
+    原稿 aurora 用 `t += 0.012` 累积 + `requestAnimationFrame(draw)`。已改成**闭式 `draw(tt)`**
+    （tt = 时间轴秒；ribbon() 本就是时间的闭式正弦，只是把累积的 t 换成传入的 tt），由 master
+    timeline 的 proxy tween onUpdate 驱动。**无 Math.random**（极光全是确定性正弦）→ hyperframes
+    逐帧捕获精确复现。波形条也在 draw(tt) 里按同一正弦场算高度（与极光同步）。
+
+  ▌配色  极光 palette: 冷蓝[60,150,255] 紫[150,110,255] 青[70,240,210] 品红[255,120,210]
+         标题渐变 #eaf4ff→#c9b8ff→#8ef0e0→#ffc6ef；玻璃面板 rgba(255,255,255,.04-.13) + blur(34px)
+  ▌字体  标题 'PingFang SC' 800（彩色渐变描字）；EN/meta ui-monospace
+
+  ▌Composition-level 背景（粘贴进 index.html GSAP <script>，确定性闭式 draw(tt)）
+    1) #stage 第一个子元素：<canvas id="aurora" width="540" height="960"></canvas>（半分辨率拉伸即可，
+       极光是柔光背景；CSS 把它 width/height:100% 铺满 + filter:saturate(1.15)）。其后叠 .grain（静态
+       SVG 噪点）+ .vignette。
+    2) GSAP <script>（tl=master timeline，DUR=composition.durationSeconds）：
+
+    ```js
+    (function(){
+      var cv=document.getElementById('aurora'); if(!cv) return;
+      var ctx=cv.getContext('2d'), W=cv.width, H=cv.height;
+      var palette=[[60,150,255],[150,110,255],[70,240,210],[255,120,210]];
+      function lerp(a,b,t){return a+(b-a)*t;}
+      function colorAt(p){var n=palette.length,f=p*n,i=Math.floor(f)%n,j=(i+1)%n,t=f-Math.floor(f);
+        t=t*t*(3-2*t);var a=palette[i],b=palette[j];return [lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)];}
+      function ribbon(time,baseY,amp,speed,freq,phase,thickness,colorPhase,alpha){
+        var grad=ctx.createLinearGradient(0,0,W,0);
+        for(var g=0;g<=4;g++){var c=colorAt((colorPhase+g*0.12+time*0.02)%1);
+          grad.addColorStop(g/4,'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+alpha+')');}
+        ctx.fillStyle=grad;ctx.beginPath();var step=14,first=true;
+        for(var x=-20;x<=W+20;x+=step){var u=x/W,y=baseY+Math.sin(u*freq+time*speed+phase)*amp
+          +Math.sin(u*freq*2.3+time*speed*0.6+phase*1.7)*amp*0.45+Math.sin(u*freq*0.5-time*speed*0.4)*amp*0.7;
+          if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);}
+        for(var x2=W+20;x2>=-20;x2-=step){var u2=x2/W,th=thickness*(0.7+0.5*Math.sin(u2*3+time*speed));
+          var y2=baseY+Math.sin(u2*freq+time*speed+phase)*amp+Math.sin(u2*freq*2.3+time*speed*0.6+phase*1.7)*amp*0.45
+          +Math.sin(u2*freq*0.5-time*speed*0.4)*amp*0.7+th;ctx.lineTo(x2,y2);}
+        ctx.closePath();ctx.fill();
+      }
+      function draw(tt){
+        var bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#050a1f');bg.addColorStop(0.5,'#070414');bg.addColorStop(1,'#02030c');
+        ctx.globalCompositeOperation='source-over';ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+        ctx.globalCompositeOperation='lighter';
+        ribbon(tt,H*0.30,70,0.55,5.0,0.0,240,0.00,0.16);
+        ribbon(tt,H*0.42,90,0.40,4.0,1.3,300,0.28,0.15);
+        ribbon(tt,H*0.55,80,0.70,6.0,2.6,210,0.55,0.14);
+        ribbon(tt,H*0.66,110,0.33,3.2,0.7,340,0.72,0.13);
+        ribbon(tt,H*0.78,95,0.50,4.6,3.4,260,0.40,0.12);
+        for(var k=0;k<5;k++){var cx=(Math.sin(tt*0.3+k*1.7)*0.5+0.5)*W,c=colorAt((k*0.2+tt*0.03)%1);
+          var sh=ctx.createLinearGradient(cx,0,cx,H);
+          sh.addColorStop(0,'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+',0.0)');
+          sh.addColorStop(0.4,'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+',0.05)');
+          sh.addColorStop(1,'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+',0.0)');
+          ctx.fillStyle=sh;ctx.fillRect(cx-90,0,180,H);}
+        ctx.globalCompositeOperation='source-over';
+      }
+      var clock={t:0};
+      tl.to(clock,{t:DUR,duration:DUR,ease:'none',onUpdate:function(){draw(clock.t);}},0);
+      draw(0);
+    })();
+    ```
+    要点：draw(tt) 纯 f(tt)，无 rAF / Math.random / 累积。波形条若要：在 onUpdate 里同样按
+    `0.35+0.4*abs(sin(tt*2.4+i*0.5))+...` 设各 bar 高度（与极光同步）。
+
+  Best with: 品牌叙事 / 情绪 / 治愈 / 高级感 / 慢节奏口播。运镜建议偏「固定/轻起伏」，让极光慢慢涌。
+  尾卡: card-cta 重新着色为极光渐变（蓝紫青品红），保留动画 rig。
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>style · liquid-aurora (流光极光 · 真人窗口 + 极光在后)</title>
+<style>
+  html, body { margin:0; padding:0; background:#04060f; font-family:ui-sans-serif,system-ui,sans-serif; }
+  .stage { position:relative; width:1080px; height:1920px; transform-origin:top left; transform:scale(0.42);
+           overflow:hidden;
+           background: linear-gradient(160deg,#050a1f,#0a0726 45%,#02030c),
+             radial-gradient(80% 50% at 30% 22%, rgba(150,110,255,.25), transparent 60%),
+             radial-gradient(70% 50% at 72% 64%, rgba(70,240,210,.18), transparent 60%); }
+  .card-host { position:absolute; left:84px; top:1180px; width:912px; height:560px; }
+</style>
+</head>
+<body>
+<div class="stage"><div class="card-host">
+
+<div class="card" data-card-id="ref-liquid-aurora">
+  <style>
+    .card[data-card-id="ref-liquid-aurora"] .root {
+      --ice:rgba(150,210,255,.85); --font-han:'PingFang SC','Inter',sans-serif; --font-mono:ui-monospace,'SF Mono',monospace;
+      width:100%; height:100%; position:relative; overflow:hidden; box-sizing:border-box;
+      border-radius:40px; padding:60px 56px 56px;
+      background:linear-gradient(155deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04));
+      border:1px solid rgba(200,220,255,0.22);
+      -webkit-backdrop-filter:blur(34px) saturate(1.4); backdrop-filter:blur(34px) saturate(1.4);
+      box-shadow:0 30px 90px rgba(10,15,50,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+      display:flex; flex-direction:column; justify-content:center; color:#fff;
+      container-type:inline-size;
+    }
+    .card[data-card-id="ref-liquid-aurora"] .sub-en { font-family:var(--font-mono); font-size:24px; letter-spacing:5px;
+      text-transform:uppercase; color:var(--ice); margin-bottom:26px; }
+    .card[data-card-id="ref-liquid-aurora"] .title { font-family:var(--font-han); font-size:clamp(72px,9cqi,104px);
+      line-height:1.08; font-weight:800; letter-spacing:2px; margin:0; overflow-wrap:anywhere; text-wrap:balance;
+      background:linear-gradient(115deg,#eaf4ff 0%,#c9b8ff 38%,#8ef0e0 72%,#ffc6ef 100%);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      filter:drop-shadow(0 4px 30px rgba(120,140,255,0.25)); }
+    .card[data-card-id="ref-liquid-aurora"] .byline { margin-top:38px; display:flex; align-items:center; gap:16px;
+      font-size:30px; font-weight:500; color:rgba(225,235,255,0.92); }
+    .card[data-card-id="ref-liquid-aurora"] .byline .chip { background:linear-gradient(135deg,rgba(120,170,255,.25),rgba(70,240,210,.25));
+      border:1px solid rgba(255,255,255,.2); padding:7px 20px; border-radius:100px; font-size:26px; }
+    .card[data-card-id="ref-liquid-aurora"] .takeaway { margin-top:40px; padding-top:34px;
+      border-top:1px solid rgba(200,220,255,0.18); font-size:clamp(28px,4cqi,38px); line-height:1.5; font-weight:500;
+      color:rgba(240,245,255,0.95); }
+    .card[data-card-id="ref-liquid-aurora"] .takeaway .hl { background:linear-gradient(90deg,#8ef0e0,#c9b8ff);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; font-weight:700; }
+  </style>
+  <div class="root">
+    <div class="sub-en" data-anim="fade-in" data-anim-at="0.2" data-anim-duration="0.5">an honest conversation about ai</div>
+    <h1 class="title" data-anim="settle" data-anim-at="0.4" data-anim-duration="0.7">一场关于 AI 的真实对话</h1>
+    <div class="byline" data-anim="fade-in" data-anim-at="0.85" data-anim-duration="0.5"><span class="chip">Jeff × 卓霖</span> 现场记录</div>
+    <div class="takeaway" data-anim="settle" data-anim-at="1.0" data-anim-duration="0.6">真正的能力，不是把 AI 用得多花哨，而是<span class="hl">想清楚哪一步该交给它</span>。</div>
+  </div>
+</div>
+
+</div></div>
+</body>
+</html>
