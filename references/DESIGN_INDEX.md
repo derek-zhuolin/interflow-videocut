@@ -6,7 +6,7 @@ designing a takeaway video.
 
 ```
 Style  ×  Layout  ×  VideoFrame
- (11)      (5)         (3)        = 165 possible combinations
+ (10)      (6)         (3)        = 180 possible combinations
 ```
 
 > **One style breaks the mold:** `editorial-print` is an **asset-driven montage**
@@ -30,8 +30,11 @@ self-contained HTML fragment that follows the interflow-video-cut card-HTML cont
 | `pip` | [layouts/pip.html](layouts/pip.html) | card fills canvas, video rounded PiP in corner | content-heavy moment, speaker secondary |
 | `overlay` | [layouts/overlay.html](layouts/overlay.html) | video full-bleed, glass card floats on bottom | cinematic / dramatic moments |
 | `deck` ◇ | [layouts/deck.html](layouts/deck.html) | 3D fanned card carousel (cover-flow); cards ARE the show, video hides or becomes a corner pip | testimonials / 卖点轮播 / 多条金句 |
+| `showcase` ◈ | [layouts/showcase.html](layouts/showcase.html) | bottom talking-head pip (permanent) + a top "evidence wall" of portrait B-roll tiles that accumulates & reflows (1→2→3→grid); each tile a live clip with red label + view-count chip; pip pops to fullscreen then shrinks back | 案例墙 / hook 拆解 / 作品集 / 数据陈列 (asset-driven) |
 
 ◇ `deck`（**3D 旋转木马 / 卡片叠放**）— 唯一一个**卡片本身就是主角**的 layout：一张卡正对镜头，左右两张退到 3D 扇形里（rotateY + translateZ 后移 + 模糊变暗），每切一张像 cover-flow 一样把当前卡转去左侧、下一张从右侧转上来。**它替代默认的 slip 转场**（卡片不再上滑消失，而是在 3D 扇里轮转）。`#video-wrap` 两种用法：(A) showcase — 直接 `opacity:0` 把口播藏掉，让卡墙独占画面；(B) witness pip — 留一个右上角圆角小窗看着卡墙转。背景别用纯色，配 `pastel-aura` / `glass` 风格把 `#stage` 铺成天空/极光底，让扇形卡片浮在一个世界里。frame 恒 `clean`。整套 perspective + 三槽位 transform + advance 补间写在 [layouts/deck.html](layouts/deck.html) 头注释。最适合：评价墙 / testimonials、产品卖点轮播、多条金句、功能巡览。
+
+◈ `showcase`（**案例陈列墙 + 口播见证 + 焦点呼吸**）— 下方口播 pip 常驻，上方一面**不断累积重排的案例证据墙**：竖屏 B-roll 卡 1→2→3→3×N 网格地长出来，每张卡戴红色分类 label + 黑色观看数 chip，铺在网格纸底上。签名动作是**焦点呼吸**——口播 pip 从底部小窗突然放大到全屏、hold、再缩回，期间上方墙体继续滚动播放（三件事同时发生：信息累积 + 焦点呼吸 + 画面不静止，这是高级感来源）。⚠️**素材驱动**（同 editorial-print）：每张墙卡 = 用户喂的竖屏片段 + 分类 label + 观看数，多视频源机制直接复用 [editorial-print-montage.md](editorial-print-montage.md)（卡内 `<video>` 唯一 id + 自己的 `data-track-index` + muted + data-volume=0）。三段动效（墙体重排 explicit-coord FLIP / 焦点全屏 pop / 活体卡 Ken-Burns）+ 三套画幅 pip 坐标写在 [layouts/showcase.html](layouts/showcase.html) 头注释。frame 恒 `clean`，配 `pastel-aura` / `swiss` 浅色网格纸底最对味。最适合：案例墙 / hook 拆解 / 作品集巡览 / 带证据片段的数据陈列。
 
 A layout is a **two-part recipe**: pick a `card.zone` value to put in
 `storyboard.json` AND author a GSAP tween for `#video-wrap` to its
@@ -57,14 +60,10 @@ exist in the real schema; the strict v3 schema only has `card.zone`.)
 | **代码终端** | `terminal` | 黑底绿字代码风，技术、极客、工程感 | 代码 · 终端 · 技术 · 编程 · 极客 |
 | **柔光浅色** | `pastel-aura` | 浅色柔和不刺眼，日常、白天、轻松（白天锚点） | 浅色 · 柔和 · 清爽 · 日常 · 温柔 |
 | **杂志印刷** | `editorial-print` | 把照片/素材排成杂志跨页（不是文字卡） | 杂志 · 印刷 · 作品集 · 大事记 · 排版 |
-| **字骸成形** | `ink-figure` | 暖宣纸 + 水墨字相，小字聚成人形落在圆相里，朱砂点缀 | 国风 · 功夫 · 书法 · 水墨 · 禅 · 招式谱 |
-
 **4 大类（选风格题就按这个分）：**
 - **暗调电影感**（黑底·高级·有动态）= 暗夜星河 / 玻璃拟态 / 暖玻 HUD / 暖光太空 / 撞色大字
 - **干净专业**（数据·报告·严肃）= 瑞士网格 / 黑白极简 / 代码终端
-- **浅色清爽**（日常·白天·轻松）= 柔光浅色
-- **国风水墨**（文化·功夫·书法）= 字骸成形
-- **杂志素材**（作品集·素材排版）= 杂志印刷
+- **浅色清爽**（日常·白天·轻松）= 柔光浅色- **杂志素材**（作品集·素材排版）= 杂志印刷
 
 > 自动匹配（`auto-style.py`）也按中文名回报：亮视频→柔光浅色/瑞士网格；
 > 暗+冷视频→暗夜星河/玻璃拟态；暗+暖视频→暖光太空/暖玻 HUD；暗+中性→暖玻 HUD/暗夜星河。
@@ -83,8 +82,6 @@ exist in the real schema; the strict v3 schema only has `card.zone`.)
 | `spatial` ✶ | [styles/spatial.html](styles/spatial.html) | single warm-dark atmosphere · faux-3D floating panel (perspective + double shadow) · warm rim light · viewfinder corner chrome · grain + halftone | `#FF8A4C` | Inter + PingFang SC + mono meta |
 | `nebula-glass` ✸ | [styles/nebula-glass.html](styles/nebula-glass.html) | pure-black deep space · twin flow-field particle stars (silver + electric-blue hot-core) · frosted-glass panel · Swiss/Guizang type (hollow giant numeral, hairline rules) · viewfinder chrome | `#5B8CFF` | Inter + PingFang SC |
 | `editorial-print` ◆ | [styles/editorial-print.html](styles/editorial-print.html) | warm paper · 3px ink borders · HARD offset shadow (no blur) · grain · ghost serif · hand-drawn arrow — an **asset montage**, not a text card | `#16140F` | serif headline + Inter labels |
-| `ink-figure` ◈ | [styles/ink-figure.html](styles/ink-figure.html) | warm rice paper · sumi-ink calligraphy · 竖排序号 title · seal-red chip · 小字聚成人形 inside an enso · ghost glyph watermark | `#A4291F` | LXGW WenKai TC kai + Inter meta |
-
 ★ `pastel-aura` — light/soft branch: ivory + pastel aurora gradients, serif
 headlines, white floating cards. Best for 个人分享 / brand storytelling /
 AI·SaaS tone. Pairs well with `pip` or `stack`; pip uses a white-ring pill.
@@ -151,20 +148,6 @@ photo-grid / collage / logo-strip / print-stack), 3 transitions (whip-pan /
 blinds-wipe / paper-flash), asset staging, image↔video slot rules, and the two
 usage modes — in [editorial-print-montage.md](editorial-print-montage.md).
 Frame is always `clean` (panels carry their own border).
-
-◈ `ink-figure`（**字骸成形 / 水墨字相**）— 国风/武侠水墨调：暖宣纸底 + 焦墨小字
-聚成一个**人形剪影**（功夫招式）落在细笔「圆相 enso」里，朱砂红点缀，左侧竖排大字
-（kai 体）+ 朱砂序号印（壹/贰/叁），背后一个超大 ghost「武」字水印，纸纤维肌理。
-气质克制、像毛笔写出来的，**不是花哨拼贴**。签名招式：竖排 kai 标题 + 朱砂方印序号 +
-细笔残圆 enso + 字成人形（少量字染朱砂、核心几字加重）。**真正的「字成人形」群字 morph
-（招式间形随意转）是 composition 级 `<canvas>`**（卡片禁 `<script>`）：~150 个字从散布
-位置 lerp 到当前招式的剪影锚点，由 GSAP 时间轴 onUpdate 驱动、写成确定式 `pos=f(t)`，
-这样 hyperframes 逐帧捕获才能精确复现（守则同 nebula-glass：禁 `Math.random`、禁
-`repeat:-1`、用 i 的哈希做种）。`styles/ink-figure.html` 里的卡片是**免脚本静态近似**
-（手摆字成一个 pose），不需要活体 morph 时直接 clone。accent 朱砂 `#A4291F`，字体
-`LXGW WenKai TC`（已随 skill 打包）。Best with `stack` / `split` / `pip`；frame 恒
-`clean`（圆相和宣纸自带装饰，加边框反而廉价）。用于：国风 / 功夫 / 书法 / 茶禅 /
-文化叙事 · 招式谱式枚举 · 反思金句。
 
 Choose by content tone, not by content type — `swiss` works for a reflective
 finance piece if the tone is disciplined; `terminal` works for non-tech if the
@@ -253,8 +236,7 @@ move, never out of sync.
 | 产品发布 / 科技沉浸感 | `nebula-glass` × `overlay`, `spatial` × `pip`, `spatial` × `overlay`, `glass` × `overlay` |
 | 极简陈述 | `minimal` × `split`, `swiss` × `overlay` |
 | 评价墙 / 卖点轮播 / 多条金句 | `pastel-aura` × `deck`, `glass` × `deck` |
-| 国风 / 功夫 / 书法 / 茶禅 / 文化 | `ink-figure` × `stack`, `ink-figure` × `split` |
-| 素材展示 / 作品集 / 大事记 / 公司介绍 | `editorial-print`（fullscreen scene, no video↔card split — see [montage kit](editorial-print-montage.md)） |
+| 案例墙 / hook 拆解 / 作品集巡览（带观看数证据） | `pastel-aura` × `showcase`, `swiss` × `showcase` || 素材展示 / 作品集 / 大事记 / 公司介绍 | `editorial-print`（fullscreen scene, no video↔card split — see [montage kit](editorial-print-montage.md)） |
 
 These are starting points only. Look at the transcript, pick the tone, then
 pick the visual.

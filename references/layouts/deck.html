@@ -1,0 +1,156 @@
+<!--
+  Layout: deck — 3D fanned card carousel (cover-flow)
+  ─────────────────────────────────────────────────────────────────────
+  A center card faces the camera; its two neighbours recede into a 3D fan
+  (rotateY + translateZ back + blur + dim). On each cut the deck "advances"
+  like cover-flow: the active card swings to the left slot, the next card
+  rises from the right slot to center. Use it when the cards ARE the show —
+  a wall of testimonials, a carousel of product卖点, a run of金句 — and the
+  talking-head is secondary or absent. (Reference video: an "Aura" testimonial
+  carousel fanning over a sky gradient.)
+
+  This is the one layout where cards do NOT slip past each other (the default
+  Motion model). The deck fan REPLACES the slip transition.
+
+  ── Implementation: a two-part recipe ────────────────────────────────
+  storyboard.json card entry (strict v3):
+    {
+      "id": "card-XX",
+      "intent": "carousel testimonial / 卖点 / 金句 — one per slide",
+      "startSec": 6, "endSec": 11,
+      "accentIndex": 0,
+      "zone": "fullscreen",
+      "contentHints": { "kicker": "...", "title": "...", "detail": "..." }
+    }
+
+  #video-wrap — TWO modes (pick one for the whole deck run):
+    (A) showcase (default): hide the speaker, let the deck own the frame —
+        tl.to('#video-wrap', { opacity: 0, duration: 0.5, ease: 'power2.in' }, START_SEC);
+    (B) witness pip: keep a small rounded speaker bubble watching the deck —
+        landscape (1920×1080):  { left: 1528, top: 40, width: 336, height: 189 }
+        portrait  (1080×1920):  { left: 706,  top: 32, width: 344, height: 194 }
+        4:5       (1080×1350):  { left: 706,  top: 24, width: 344, height: 194 }
+        tl.to('#video-wrap', { ...rect, duration: 0.6, ease: 'power3.inOut' }, START_SEC);
+
+  ── Deck mechanism (composition-level, in Step 9 <script>) ────────────
+  Keep THREE cards alive at once (prev / active / next) via the
+  data-track-index window; mount them all under #card-host. The host carries
+  the perspective; each card sits in one of three transform slots.
+
+    #card-host {            /* set in composition CSS */
+      perspective: 2200px;
+      perspective-origin: 50% 44%;
+    }
+    .card .root { transform-style: preserve-3d; will-change: transform, filter; }
+
+  Slot transforms (the fan):
+    LEFT   translateX(-46%) translateZ(-360px) rotateY( 34deg) scale(.92)
+           filter: blur(3px) brightness(.80); opacity:.50; z-index:1
+    ACTIVE translateX(  0%) translateZ(   0px) rotateY(  0deg) scale(1)
+           filter: none;                       opacity:1;   z-index:3
+    RIGHT  translateX( 46%) translateZ(-360px) rotateY(-34deg) scale(.92)
+           filter: blur(3px) brightness(.80); opacity:.50; z-index:1
+  (Cards beyond ±1 sit in the RIGHT slot, opacity 0, waiting their turn.)
+
+  Advance tween at each cut T (one continuous cover-flow swing — NOT a slip):
+    const SWING = 0.9, E = 'power3.inOut';
+    tl.to(prevActive, { ...LEFT,   duration: SWING, ease: E }, T);  // active → left
+    tl.to(nextCard,   { ...ACTIVE, duration: SWING, ease: E }, T);  // next   → center
+    tl.fromTo(afterNext, { ...RIGHT, opacity:0 },
+                         { ...RIGHT, opacity:.5, duration: SWING, ease: E }, T);
+
+  Ambient: give the ACTIVE card a tiny float (drift, ≤8px / 9–13s, finite
+  repeat) so the deck breathes; never animate the side cards (they're depth).
+
+  ── Background ────────────────────────────────────────────────────────
+  The deck reads best over an atmospheric ground, NOT flat color. Pair with
+  the `pastel-aura` or `glass` style and set #stage's background to that
+  style's gradient (e.g. the sky/aura radial-gradients) so the fanned cards
+  float in a world. Frame is always `clean` (the 3D fan forbids deco chrome).
+
+  Best with
+    styles:  pastel-aura (推荐, 天空/极光底) · glass · minimal
+    frames:  clean
+    content: 评价墙 / testimonials · 产品卖点轮播 · 多条金句 · 功能巡览
+    rhythm:  works with both fixed (pip witness) and showcase (video hidden)
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>layout · deck (3D fanned card carousel)</title>
+<style>
+  html, body { margin: 0; padding: 0;
+               font-family: ui-sans-serif, system-ui, sans-serif; }
+  .stage { position: relative; width: 1920px; height: 1080px;
+           transform-origin: top left; transform: scale(0.5);
+           overflow: hidden;
+           /* sky/aura ground — in a real comp this comes from the paired style */
+           background:
+             radial-gradient(ellipse 70% 60% at 50% 8%,  #bfe6ff 0%, transparent 60%),
+             radial-gradient(ellipse 90% 70% at 50% 104%, #eaf6ff 0%, transparent 62%),
+             linear-gradient(180deg, #56b5f0 0%, #8fd0f6 46%, #dff0fb 100%); }
+  /* drifting clouds for atmosphere */
+  .cloud { position: absolute; border-radius: 50%; filter: blur(34px);
+           background: rgba(255,255,255,.85); pointer-events: none; }
+  .c1 { left: 90px;  top: 720px; width: 460px; height: 200px; }
+  .c2 { right: 60px; top: 760px; width: 540px; height: 220px; }
+  .c3 { left: 640px; top: 70px;  width: 420px; height: 150px; opacity: .7; }
+
+  .deck { position: absolute; inset: 0;
+          display: flex; align-items: center; justify-content: center;
+          perspective: 2200px; perspective-origin: 50% 44%; }
+  .slide { position: absolute; width: 560px; height: 640px;
+           border-radius: 30px; box-sizing: border-box;
+           background: rgba(255,255,255,.96);
+           box-shadow: 0 50px 110px -40px rgba(20,60,110,.45),
+                       0 12px 36px -16px rgba(20,60,110,.25),
+                       inset 0 1.5px 0 rgba(255,255,255,.9);
+           transform-style: preserve-3d;
+           display: flex; flex-direction: column; align-items: center;
+           justify-content: center; padding: 64px 56px; text-align: center; }
+  .slide .q { font: 600 40px/1.4 ui-serif, "Songti SC", Georgia, serif;
+              color: #1d3a52; }
+  .slide .who { margin-top: 36px; font: 700 22px/1 ui-sans-serif, system-ui, sans-serif;
+                letter-spacing: .04em; color: #4a7fb0; }
+  .slide .dots { position: absolute; bottom: 40px; display: flex; gap: 10px; }
+  .slide .dots i { width: 9px; height: 9px; border-radius: 50%;
+                   background: rgba(40,90,140,.22); }
+  .slide .dots i.on { background: #2f7fc4; width: 26px; border-radius: 6px; }
+
+  /* the fan: three slots */
+  .left  { transform: translateX(-46%) translateZ(-360px) rotateY(34deg) scale(.92);
+           filter: blur(3px) brightness(.80); opacity: .50; z-index: 1; }
+  .active{ transform: translateX(0) translateZ(0) rotateY(0) scale(1);
+           opacity: 1; z-index: 3; }
+  .right { transform: translateX(46%) translateZ(-360px) rotateY(-34deg) scale(.92);
+           filter: blur(3px) brightness(.80); opacity: .50; z-index: 1; }
+
+  .tag { position: absolute; left: 50%; top: 40px; transform: translateX(-50%);
+         z-index: 5; font: 700 20px/1 ui-sans-serif, system-ui, sans-serif;
+         letter-spacing: .28em; text-transform: uppercase; color: #1d4e7a;
+         opacity: .8; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+    <span class="tag">layout · deck · cover-flow</span>
+    <div class="deck">
+      <div class="slide left">
+        <div class="q">“前一张退到左侧，倾斜、后移、变暗”</div>
+        <div class="who">— PREV SLOT</div>
+      </div>
+      <div class="slide right">
+        <div class="q">“下一张在右侧待命，转上来即成主角”</div>
+        <div class="who">— NEXT SLOT</div>
+      </div>
+      <div class="slide active">
+        <div class="q">“我终于沉浸其中，<br/>像是为我而造的世界。”</div>
+        <div class="who">— ACTIVE · 正对镜头</div>
+        <div class="dots"><i></i><i class="on"></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

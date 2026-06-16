@@ -467,23 +467,34 @@ AskUserQuestion({
         { label: "上下分屏 (stack)",     description: "video 在上方 (~52%)，card 在下方。说话人头像 + 总结句的经典组合，竖屏也好用。" },
         { label: "画中画 (pip)",         description: "card 满屏，video 缩成圆角小窗在右上角。内容为主、speaker 为辅时用。" },
         { label: "全屏浮层 (overlay)",   description: "video 全屏播放，card 作为玻璃浮层落在画面上。情绪 / 电影感强烈。" },
-        { label: "3D 卡片轮播 (deck)",   description: "卡片本身就是主角：一张正对镜头，左右两张退到 3D 扇形里，像 cover-flow 一样轮转。video 藏掉或缩成右上角小窗。适合评价墙 / 卖点轮播 / 多条金句。配 pastel-aura / glass 风格做天空底最好看。" }
+        { label: "3D 卡片轮播 (deck)",   description: "卡片本身就是主角：一张正对镜头，左右两张退到 3D 扇形里，像 cover-flow 一样轮转。video 藏掉或缩成右上角小窗。适合评价墙 / 卖点轮播 / 多条金句。配 pastel-aura / glass 风格做天空底最好看。" },
+        { label: "陈列墙 (showcase)",     description: "下方口播常驻 + 上方一面不断累积重排的「案例证据墙」(竖屏 B-roll 卡 + 红标签 + 观看数 chip + 网格纸底)，焦点会从底部小窗突然放大全屏再缩回、上方一直滚动播放。⚠️素材驱动：每张墙卡是你喂进来的竖屏片段。适合案例墙 / hook 拆解 / 作品集巡览。配方见 references/layouts/showcase.html + editorial-print-montage.md（多视频源机制）。" }
       ]
     },
     {
-      question: "选视觉风格：你的内容想要什么感觉？",
+      question: "选视觉风格 — 对照桌面风格总览图，直接报具体风格（中文名或 key）",
       header: "选风格",
       multiSelect: false,
-      // 中文优先词库（中文名 + 大白话「什么时候用」），让中国创作者一眼会选。
-      // 括号里的英文 key 不展示给非技术用户也行，但保留它，agent 用它映射到
-      // frame auto-pick matrix 的列（cinematic / clinical / pastel-aura / editorial-print）。
-      // 5 个分组成员与下方 frame 矩阵对应（国风水墨/字骸成形组 frame 恒 clean，见矩阵豁免）。
+      // 【确定性原则 · 不要破坏】用户报哪一款，就锁哪一款；agent 绝不在风格间
+      //   自行替换、也不再"选组后组内挑"。这是「确保每次生成都是对的」的关键 ——
+      //   风格选择必须落到具体 key（下面 10 款之一），而不是一个模糊的"组"。
+      // 完整 10 款的真实视觉见桌面总览图：~/Desktop/interflow-style-gallery/index.html。
+      //   选风格时先引导用户翻这页看真实样子，再报中文名 / key。
+      // key 用于映射 frame auto-pick 矩阵的列（cinematic / clinical / pastel-aura / editorial-print）。
+      // 环境限制：若 AskUserQuestion 单题选项数受限（如最多 4 个），放最相关的几款 +
+      //   让用户用 "Other" 直接输入 key；不受限则全部列出。
+      // 回"默认 / auto"→ 用 recommendedStyle（auto-style 按明暗冷暖算出的具体 key）。
       options: [
-        { label: "暗调电影感（黑底·高级·有动态）", description: "黑底、高级、电影质感。含：暗夜星河(nebula-glass，黑底流动粒子+玻璃，最高级最科技) · 玻璃拟态(glass，简单两色渐变+磨砂玻璃，半透明干净高级) · 暖玻 HUD(glass-hud，暖玻璃面板浮在真人口播上+顶部章节条+底部双语字幕，橙色 accent，口播枚举/护城河清单专用，恒 overlay) · 暖光太空(spatial，黑底暖橙光，温暖有空间感) · 撞色大字(geom，黑底亮色块超大字，大胆有冲击)。什么时候用：产品/科技发布、短视频高光、强情绪开场、口播枚举拆解、想要高级感。" },
-        { label: "干净专业（数据·报告·严肃）", description: "干净、克制、权威。含：瑞士网格(swiss，白底红点大字，专业权威) · 黑白极简(minimal，纯黑白大字+大留白，高级克制) · 代码终端(terminal，黑底绿字代码风，技术极客)。什么时候用：财报数据、调查报告、技术教程、严肃陈述。" },
-        { label: "浅色清爽（日常·白天·轻松）", description: "浅色、柔和、不刺眼。含：柔光浅色(pastel-aura，浅色柔和，白天/日常感)。什么时候用：个人日常分享、品牌叙事、轻松内容、画面偏亮的视频。" },
-        { label: "国风水墨（功夫·书法·禅）", description: "暖宣纸 + 焦墨小字聚成人形落在圆相里，朱砂点缀、竖排序号。含：字骸成形(ink-figure)。什么时候用：国风/功夫/书法/茶禅/文化叙事、招式谱式枚举、反思金句。" },
-        { label: "杂志素材（作品集·素材排版）", description: "把照片/视频排成杂志跨页，不是文字卡。含：杂志印刷(editorial-print)。什么时候用：作品集、大事记、公司/产品介绍、素材展示（走 references/editorial-print-montage.md）。" }
+        { label: "暗夜星河 (nebula-glass) · 旗舰", description: "黑底 + 流动粒子 + 玻璃，最高级最有科技感。产品/科技发布、强情绪开场、想要高级感。" },
+        { label: "玻璃拟态 (glass)", description: "两色渐变 + 磨砂玻璃，半透明、干净、高级。品牌叙事 / 金句 / 故事。" },
+        { label: "暖玻 HUD (glass-hud)", description: "暖玻璃面板浮在真人口播上 + 顶部章节条 + 底部双语字幕，橙色 accent。口播枚举 / 护城河清单专用（恒 overlay）。" },
+        { label: "暖光太空 (spatial)", description: "黑底 + 暖橙光，温暖又有空间感（唯一的暖黑底）。人物 / 治愈。" },
+        { label: "撞色大字 (geom)", description: "黑底 + 亮色块 + 超大字，大胆有冲击力。态度 / 宣言 / 高光。" },
+        { label: "瑞士网格 (swiss)", description: "白底 + 红点 + 大字，干净、专业、权威。财报 / 调查报告 / 数据。" },
+        { label: "黑白极简 (minimal)", description: "纯黑白大字 + 极致留白，高级、克制。金句 / 严肃陈述。" },
+        { label: "代码终端 (terminal)", description: "黑底绿字代码风，技术、极客、工程感。技术教程。" },
+        { label: "柔光浅色 (pastel-aura)", description: "浅色柔和不刺眼，日常、白天、轻松。个人分享 / 画面偏亮的视频。" },
+        { label: "杂志印刷 (editorial-print)", description: "把照片/视频排成杂志跨页（不是文字卡）。作品集 / 大事记 / 素材展示（走 references/editorial-print-montage.md）。" }
       ]
     },
     {
@@ -532,16 +543,23 @@ the reply. Bullet-style 1/2/3/4 keeps the reply parseable:
    C. pip     画中画 (card 满屏, video 圆角小窗)
    D. overlay 全屏浮层 (video 全屏, card 玻璃浮层)
    E. deck    3D 卡片轮播 (卡片主角, 左右扇形轮转, video 藏掉/缩角)
+   F. showcase 陈列墙 (下方口播常驻 + 上方案例墙累积重排 + 焦点全屏 pop; 素材驱动)
 
-3) 视觉风格 — 你的内容想要什么感觉？(5 选 1)：
-   A. 暗调电影感（黑底·高级·有动态）：暗夜星河 / 玻璃拟态 / 暖光太空 / 撞色大字
-      → 产品科技发布、短视频高光、强情绪、想高级感
-   B. 干净专业（数据·报告·严肃）：瑞士网格 / 黑白极简 / 代码终端
-      → 财报数据、调查报告、技术教程、严肃陈述
-   C. 浅色清爽（日常·白天·轻松）：柔光浅色
-      → 个人日常分享、品牌叙事、轻松内容、画面偏亮
-   D. 国风水墨（功夫·书法·禅）：字骸成形
-      → 国风/功夫/书法/茶禅/文化叙事、招式谱式枚举、反思金句
+3) 视觉风格 — 对照桌面总览图 (~/Desktop/interflow-style-gallery/) 报具体风格 (中文名或 key)：
+   你报哪一款就锁哪一款，我不会再替你在风格间挑。回"默认"则按源视频明暗冷暖自动匹配。
+   ── 暗调（黑底·高级·有动态）──
+   1. 暗夜星河 nebula-glass — 黑底粒子+玻璃，最高级最科技（旗舰）
+   2. 玻璃拟态 glass       — 两色渐变+磨砂玻璃，干净高级
+   3. 暖玻 HUD glass-hud   — 暖玻面板浮口播上+章节条+双语字幕，口播枚举专用
+   4. 暖光太空 spatial     — 黑底暖橙光，温暖有空间感
+   5. 撞色大字 geom        — 黑底亮色块超大字，大胆冲击
+   ── 干净专业（数据·报告·严肃）──
+   6. 瑞士网格 swiss       — 白底红点大字，专业权威
+   7. 黑白极简 minimal     — 纯黑白大字+大留白，克制高级
+   8. 代码终端 terminal    — 黑底绿字代码风，技术极客
+   ── 浅色 / 杂志 ──
+   9. 柔光浅色 pastel-aura — 浅色柔和，白天日常
+   10. 杂志印刷 editorial-print — 照片排成杂志跨页（非文字卡）
    E. 杂志素材（作品集·素材排版）：杂志印刷
       → 作品集、大事记、公司/产品介绍、素材展示（非文字卡）
 
@@ -616,10 +634,8 @@ After the user answers (any channel):
    | `overlay` | `clean` (full-bleed forbids deco frames) | `clean` (full-bleed forbids deco frames) | `clean` | `clean` (nebula-glass: 全屏粒子场忌加边框; glass-hud: 章节条/进度轴已是 chrome，恒 `clean`) |
    | `deck` | `clean` | n/a (montage is fullscreen) | `clean` | `clean` (3D 扇形忌加边框) |
 
-   > **`ink-figure` & `deck` are exempt from this matrix — frame is always
-   > `clean`.** `ink-figure`'s enso + rice paper carry their own ornament (a
-   > deco frame double-decorates and cheapens it); `deck`'s 3D fan forbids any
-   > chrome around the cards.
+   > **`deck` is exempt from this matrix — frame is always `clean`.**
+   > `deck`'s 3D fan forbids any chrome around the cards.
 
    > **`editorial-print` is exempt from this matrix.** Its cards are fullscreen
    > asset *scenes* with no video↔card split, and every asset panel carries its
@@ -684,9 +700,9 @@ Available fonts (woff2 in `<SKILL_DIR>/assets/fonts/`, staged to work dir in Ste
 `LXGW WenKai TC` (Chinese hand-script), `Inter` (modern sans), `Virgil`
 (geometric hand). Reference via `@font-face` or `font-family` directly.
 
-`<SKILL_DIR>/references/styles/` ships 11 self-contained reference cards
+`<SKILL_DIR>/references/styles/` ships 10 self-contained reference cards
 (pastel-aura / glass / glass-hud / spatial / nebula-glass / minimal / geom / terminal /
-swiss / editorial-print / ink-figure). **These are not "inspiration" — they are your card
+swiss / editorial-print). **These are not "inspiration" — they are your card
 templates. The default is to clone the chosen style's fragment for every card
 and swap only the text + accent index.** Departing from the reference (a custom
 shape, a one-off layout) is a deliberate exception you take only when a specific
@@ -710,7 +726,7 @@ Style  ×  Layout  ×  VideoFrame
 
 | dimension | keys | what it decides |
 |---|---|---|
-| **style** | `minimal` `geom` `terminal` `swiss` `pastel-aura` `glass` `glass-hud` `spatial` `nebula-glass` `editorial-print` `ink-figure` | the card's visual language — fonts, colors, ornament, layout-within-card |
+| **style** | `minimal` `geom` `terminal` `swiss` `pastel-aura` `glass` `glass-hud` `spatial` `nebula-glass` `editorial-print` | the card's visual language — fonts, colors, ornament, layout-within-card |
 | **layout** | `split` `stack` `pip` `overlay` `deck` | how the source video and the card share the canvas |
 | **frame** | `clean` `hairline` `polaroid` | the decorative chrome around the video element |
 

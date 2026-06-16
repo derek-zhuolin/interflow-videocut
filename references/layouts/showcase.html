@@ -1,0 +1,197 @@
+<!--
+  Layout: showcase — 案例陈列墙 + 口播见证 + 焦点呼吸
+  ─────────────────────────────────────────────────────────────────────
+  A talking-head bubble lives PERMANENTLY at the bottom; above it an
+  ever-reflowing "evidence wall" of portrait B-roll tiles accumulates and
+  re-arranges as the speaker talks — 1 tile → 2-up compare → 3-up → a 3×N
+  grid — each tile a live clip wearing a red category LABEL and a black
+  view-count CHIP, all over a graph-paper ground. The signature move is the
+  FOCUS BREATH: the speaker pip pops from its bottom slot to FULLSCREEN, holds,
+  then shrinks back — while the wall above keeps drifting and the tiles keep
+  playing. Use it when the content is "here are N examples / cases / proofs"
+  and the speaker is curating them. (Reference: a "Best Visual Hooks" reel —
+  bottom presenter + a growing wall of view-counted hook clips.)
+
+  WHY it reads as 高级: three things happen at once — info ACCUMULATES (wall
+  fills), focus BREATHES (pip ↔ fullscreen), nothing is STILL (tiles drift +
+  play). The eye always has something to track.
+
+  ⚠️ This layout is ASSET-DRIVEN like editorial-print. Each wall tile is a
+  user clip + a label + a view-count. You must stage those assets and mount
+  them as in-tile <video> — reuse the multi-asset plumbing wholesale from
+  references/editorial-print-montage.md ("Asset staging" + "Image vs video in
+  an asset slot": unique id, own data-track-index above card-host's, muted +
+  data-volume=0, freeze-extend short clips, dense keyframes). Don't reinvent it.
+
+  ── Implementation: a three-part recipe ──────────────────────────────
+  (1) storyboard.json card entries — ONE card per "wall state" (a beat where
+      the wall gains/rearranges tiles). zone is the wall region, NOT fullscreen:
+    {
+      "id": "card-XX",
+      "intent": "wall grows to 3-up: Clothing / Car / LED, with view-counts",
+      "startSec": 7, "endSec": 12,
+      "accentIndex": 0,
+      "zone": "showcase-wall",     // resolve to the TOP band (see bounds below)
+      "contentHints": { "kicker": "Best Visual Hooks", "tiles": [
+        { "label":"Clothing Brand", "views":"9.8M", "clip":"assets/hook-01.mp4" },
+        { "label":"Car Dealership", "views":"30.1M","clip":"assets/hook-02.mp4" }
+      ]}
+    }
+
+  (2) Resolve bounds (portrait 1080×1920, Derek's default — scale for others):
+      card-host (the WALL)  → { x:0,   y:96,   width:1080, height:1200 }
+      #video-wrap PIP slot  → { left:140, top:1380, width:800, height:480 }   // bottom, centered, rounded
+      A fixed TITLE block (kicker + 大标题) pins to the top ~96–300px, OUTSIDE
+      the tile grid — author it once in #stage chrome (like glass-hud's rail),
+      not per card, so it persists while the wall reflows under it.
+      landscape 1920×1080 pip:  { left:736, top:612, width:448, height:252 }   (lower-center)
+      4:5 1080×1350 pip:        { left:140, top:840, width:800, height:470 }
+
+  (3) Three motions, authored in the composition <script> (Step 9):
+
+    ① WALL REFLOW — tiles are absolutely positioned inside card-host; on each
+       new beat, settle the new tile in AND retarget the existing tiles to their
+       new grid rect (explicit-coord FLIP — no Flip plugin needed):
+         tl.fromTo(NEW_TILE, { y:60, opacity:0, scale:.96 },
+                   { y:0, opacity:1, scale:1, duration:.6, ease:'power3.out' }, T);
+         EXISTING_TILES.forEach((sel,i) =>
+           tl.to(sel, { left:rect[i].x, top:rect[i].y, width:rect[i].w, height:rect[i].h,
+                        duration:.6, ease:'power3.inOut' }, T));   // smooth reshuffle
+       Tile grid math: 1-up centered big → 2-up → 3-up row → wrap to 3×2 with
+       a view-count chip gaining prominence as cells shrink.
+
+    ② FOCUS BREATH — the pip → fullscreen → pip, the move that makes it feel
+       premium. At the emphasis beat T (hold ~H seconds, e.g. 2.2):
+         const PIP = {left:140,top:1380,width:800,height:480};
+         const FULL= {left:0,  top:0,   width:1080,height:1920};
+         tl.to('#video-wrap', { ...FULL, borderRadius:0, duration:.7, ease:'power3.inOut' }, T);
+         tl.to('#video-wrap', { ...PIP,  borderRadius:28, duration:.7, ease:'power3.inOut' }, T+H);
+       The wall does NOT pause — keep its drift running underneath; the
+       fullscreen pip simply covers it, then reveals it again on shrink.
+
+    ③ LIVE-TILE DRIFT — each tile gets ONE tiny finite Ken-Burns on its clip so
+       the wall is alive but not busy (≤2 persistent motions, 恰到好处):
+         tl.to(`${TILE} video`, { scale:1.06, duration:Math.min(compDur,6),
+                                  ease:'sine.inOut', repeat:0 }, T_tileIn);
+
+  ── Signature components (scoped per card) ────────────────────────────
+    • graph-paper ground — set on #stage (persists whole layout):
+        background:#eef0ec;
+        background-image:linear-gradient(#dadedb 1px,transparent 1px),
+                         linear-gradient(90deg,#dadedb 1px,transparent 1px);
+        background-size:40px 40px;
+    • tile = white card, radius 18px, soft shadow, clip cover inside
+    • red LABEL = pill on the tile's top edge (accent-driven; default 红 #E0231C)
+    • view CHIP = black pill bottom-left: 👁 + tabular-nums count (9.8M / 30.1K)
+
+  ── Background / frame / pairing ──────────────────────────────────────
+    Frame is always `clean` (tiles carry their own card chrome; a deco frame
+    double-borders). Reads best on the light graph-paper ground, so pair with
+    `pastel-aura` or `swiss`/`minimal` (light styles). Dark styles work too
+    (swap paper for a dark grid) but the genre is "light studio whiteboard".
+
+  Best with
+    styles:  pastel-aura (推荐, 网格纸/studio 底) · swiss · minimal · glass
+    frames:  clean
+    content: 案例墙 / hook 拆解 / 作品集巡览 / 数据陈列 with proof clips
+    rhythm:  dynamic (the focus-breath IS a dynamic move); fixed also fine
+    assets:  N 个竖屏 B-roll 片段 + 每个的分类 label + 观看数 (see montage kit)
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>layout · showcase (案例陈列墙 + 口播见证)</title>
+<style>
+  html, body { margin:0; padding:0; font-family: ui-sans-serif, "PingFang SC", system-ui, sans-serif; }
+  .stage { position:relative; width:1080px; height:1920px;
+           transform-origin:top left; transform:scale(0.5); overflow:hidden;
+           background:#eef0ec;
+           background-image:
+             linear-gradient(#dadedb 1px, transparent 1px),
+             linear-gradient(90deg, #dadedb 1px, transparent 1px);
+           background-size:40px 40px; }
+
+  /* persistent top title chrome */
+  .title { position:absolute; left:0; right:0; top:90px; text-align:center; z-index:5; }
+  .title .h { font:800 92px/0.98 "PingFang SC", system-ui, sans-serif; color:#111;
+              letter-spacing:-.02em; }
+  .title .h .em { display:inline-block; background:#b42218; color:#fff;
+                  font:800 italic 78px/1 ui-serif, Georgia, "Songti SC", serif;
+                  padding:6px 30px 12px; border-radius:8px; margin-top:10px; }
+  .title .ep { margin-top:20px; font:800 34px/1 system-ui; color:#111; letter-spacing:.04em; }
+
+  /* the wall (card-host region) */
+  .wall { position:absolute; left:60px; top:560px; width:960px; height:760px; }
+  .tile { position:absolute; background:#fff; border-radius:18px; overflow:hidden;
+          box-shadow:0 24px 48px -20px rgba(30,50,70,.4), 0 6px 16px -8px rgba(30,50,70,.25); }
+  .tile .clip { position:absolute; inset:0; background:#222 center/cover; }
+  .tile.t1 .clip { background:linear-gradient(150deg,#8a98a6,#52606d); }
+  .tile.t2 .clip { background:linear-gradient(150deg,#3fae5a,#1f7a39); }
+  .tile.t3 .clip { background:linear-gradient(150deg,#6b5648,#3a2d24); }
+  /* 3-up row of portrait tiles */
+  .tile.a { left:0;    top:0; width:300px; height:534px; }
+  .tile.b { left:330px;top:0; width:300px; height:534px; }
+  .tile.c { left:660px;top:0; width:300px; height:534px; }
+
+  .label { position:absolute; left:50%; top:-2px; transform:translateX(-50%);
+           background:#b42218; color:#fff; font:800 22px/1 system-ui;
+           padding:9px 16px; border-radius:9px; white-space:nowrap; z-index:3;
+           box-shadow:0 6px 14px -6px rgba(0,0,0,.5); }
+  .chip { position:absolute; left:14px; bottom:14px; z-index:3;
+          background:rgba(12,14,16,.82); color:#fff; font:800 26px/1 system-ui;
+          padding:11px 16px 11px 13px; border-radius:12px;
+          display:flex; align-items:center; gap:9px; }
+  .chip .eye { width:24px; height:24px; border-radius:50%;
+               border:3px solid #fff; position:relative; }
+  .chip .eye::after { content:""; position:absolute; left:50%; top:50%;
+               width:8px; height:8px; border-radius:50%; background:#fff;
+               transform:translate(-50%,-50%); }
+
+  /* bottom presenter pip (permanent) */
+  .pip { position:absolute; left:140px; top:1380px; width:800px; height:480px;
+         border-radius:28px; overflow:hidden;
+         background:linear-gradient(160deg,#2a3340 0%, #10161e 70%);
+         box-shadow:0 30px 60px -24px rgba(0,0,0,.55); }
+  .pip .who { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
+              color:rgba(255,255,255,.92); font:800 40px/1.3 "PingFang SC"; text-align:center; }
+  .pip .who small { display:block; margin-top:14px; font:600 24px/1 ui-monospace, monospace;
+              color:rgba(255,255,255,.5); letter-spacing:.1em; }
+
+  .cap { position:absolute; left:0; right:0; top:1320px; text-align:center; z-index:4;
+         font:800 40px/1 "PingFang SC"; color:#111; }
+
+  .note { position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
+          font:700 20px/1 ui-sans-serif; letter-spacing:.22em; text-transform:uppercase;
+          color:#9aa3a0; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="title">
+      <div class="h">Best<br/><span class="em">Visual Hooks</span></div>
+      <div class="ep">ep · 2</div>
+    </div>
+
+    <div class="wall">
+      <div class="tile t1 a"><div class="clip"></div>
+        <span class="label">Clothing Brand</span>
+        <span class="chip"><span class="eye"></span>9.8M</span></div>
+      <div class="tile t2 b"><div class="clip"></div>
+        <span class="label">Car Dealership</span>
+        <span class="chip"><span class="eye"></span>30.1M</span></div>
+      <div class="tile t3 c"><div class="clip"></div>
+        <span class="label">Tony LED Guy</span>
+        <span class="chip"><span class="eye"></span>40.5M</span></div>
+    </div>
+
+    <div class="cap">these work</div>
+
+    <div class="pip">
+      <div class="who">口播常驻底部<small>POP → FULLSCREEN → 缩回</small></div>
+    </div>
+
+    <span class="note">layout · showcase · 上墙下人 · 焦点呼吸</span>
+  </div>
+</body>
+</html>
