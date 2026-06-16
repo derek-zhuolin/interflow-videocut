@@ -6,18 +6,21 @@
 
 ## 一句话定位（选风格题用这张）
 
-本目录**只留「待加固 DNA」原稿** + neon 的 C 档配方源；已生产化的风格原稿已删（去 `../<key>.html`
-看加固后的生产 fragment，避免重复）。
+**炸裂族 6 款现已全部加固成生产级**（去 `../<key>.html`）；原稿已删，本目录只留 neon 的 C 档
+配方源 + 本 README。
 
 | 中文名 | key | 调性 | 什么时候用 | 状态 / 文件 |
 |---|---|---|---|---|
 | **霓虹网格** | `neon-grid-hud` | 赛博·TRON·冷霓虹 | 科技/发布会预告/短视频高光/夸张视觉（炸裂档默认） | ✅ 生产级 → `../neon-grid-hud.html`（本目录 `neon-grid-hud.html` 仅留作 C 档 scanline/ticker/sweep 配方源）|
-| **流光极光** | `liquid-aurora` | 流动极光·液态·梦幻 | 品牌/情绪/高级感/治愈 | ✅ 生产级 → `../liquid-aurora.html`（原稿已删）|
-| **全息虹彩** | `holo-iridescent` | 全息箔·色散·最贵感 | 最前卫/产品揭晓/潮牌 | ✅ 生产级 → `../holo-iridescent.html`（原稿已删）|
-| **电影光影** | `cinematic-bloom` | 宽银幕·镜头光晕·暖 | 大片质感/情绪/电影感开场收尾 | ◐ DNA 待加固 → 本目录 `cinematic-bloom.html` |
-| **动态巨字** | `kinetic-megatype` | 瑞士粗野·巨字运动 | 态度/宣言/金句/标题主导 | ◐ DNA 待加固 → 本目录 `kinetic-megatype.html` |
-| **纵深视差** | `depth-parallax` | 多层 3D 景深·视差 | 立体/沉浸/空间感 | ◐ DNA 待加固 → 本目录 `depth-parallax.html` |
-| **暖玻 HUD·简洁** | `glass-hud-clean` | 暖玻克制 | 日常口播 | ✅ 直接用现有 `../glass-hud.html`（demo 已删，无需另做）|
+| **流光极光** | `liquid-aurora` | 流动极光·液态·梦幻 | 品牌/情绪/高级感/治愈 | ✅ 生产级 → `../liquid-aurora.html` |
+| **全息虹彩** | `holo-iridescent` | 全息箔·色散·最贵感 | 最前卫/产品揭晓/潮牌 | ✅ 生产级 → `../holo-iridescent.html` |
+| **电影光影** | `cinematic-bloom` | 宽银幕·镜头光晕·暖 | 大片质感/情绪/电影感开场收尾 | ✅ 生产级 → `../cinematic-bloom.html` |
+| **动态巨字** | `kinetic-megatype` | 瑞士粗野·巨字运动 | 态度/宣言/金句/标题主导（巨字主角·真人小窗）| ✅ 生产级 → `../kinetic-megatype.html` |
+| **纵深视差** | `depth-parallax` | 多层 3D 景深·视差 | 立体/沉浸/空间感 | ✅ 生产级 → `../depth-parallax.html` |
+| **暖玻 HUD·简洁** | `glass-hud-clean` | 暖玻克制 | 日常口播 | ✅ 直接用现有 `../glass-hud.html` |
+
+> 本目录从此基本是空的（neon C 档源 + README）。「render-harden checklist」保留作**以后再引进新
+> playground 风格时的加固范本**——下面的步骤仍有效。
 
 ## 架构：都走 window-scene（真人窗口 + 特效在后）
 

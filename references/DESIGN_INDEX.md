@@ -82,9 +82,12 @@ render-harden checklist 加固成确定性版本**（neon 是范本）。原稿 
 | **霓虹网格** | `neon-grid-hud` | 赛博 TRON · 科技/发布会/短视频高光（炸裂档默认）| ✅ 生产级 |
 | **流光极光** | `liquid-aurora` | 流动液态极光 · 品牌/情绪/治愈/高级 | ✅ **生产级**（`styles/liquid-aurora.html`）|
 | **全息虹彩** | `holo-iridescent` | 全息箔色散 · 最前卫/产品揭晓/潮 | ✅ **生产级**（`styles/holo-iridescent.html`）|
-| **电影光影** | `cinematic-bloom` | 宽银幕镜头光晕 · 大片质感/情绪/电影感 | ◐ 首用加固 |
-| **动态巨字** | `kinetic-megatype` | 瑞士粗野巨字运动 · 态度/宣言/金句 | ◐ 首用加固 |
-| **纵深视差** | `depth-parallax` | 多层 3D 景深视差 · 立体/沉浸/空间感 | ◐ 首用加固 |
+| **电影光影** | `cinematic-bloom` | 宽银幕镜头光晕 · 大片质感/情绪/电影感 | ✅ **生产级**（`styles/cinematic-bloom.html`）|
+| **动态巨字** | `kinetic-megatype` | 瑞士粗野巨字运动 · 态度/宣言/金句（巨字主角·真人小窗）| ✅ **生产级**（`styles/kinetic-megatype.html`）|
+| **纵深视差** | `depth-parallax` | 多层 3D 景深视差 · 立体/沉浸/空间感 | ✅ **生产级**（`styles/depth-parallax.html`）|
+
+> **炸裂族 6 款全部生产级**（neon-grid-hud / liquid-aurora / holo-iridescent / cinematic-bloom /
+> kinetic-megatype / depth-parallax），均已渲染加固 + 确定性验证，可直接在选风格题里挑。
 
 ## Styles — the card's visual language
 

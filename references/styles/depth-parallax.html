@@ -1,0 +1,92 @@
+<!--
+  Style: depth-parallax (纵深视差 · 多层 3D 景深 · 真人窗口浮在空间里 + 视差在前后)
+  ═══════════════════════════════════════════════════════════════════════
+  「炸裂族」之一，2026-06 从 playground 加固成生产级。定位：多层 3D 景深 + 视差运镜——
+  远景虚化光球 + 细密星点（远）、真人剪影舞台（中远）、悬浮玻璃信息卡（中景·主角）、
+  锐利近景碎片（前），整个空间缓慢 dolly 推拉微摆。立体、沉浸、空间感。暖橙 terracotta 调。
+
+  ▌架构 = window-scene 的 3D 版（真人窗口浮在景深空间里，视差元素在它前后，不糊脸）
+    `#stage` perspective:1400px；`#space` 缓慢 dolly。四层（CSS translateZ）：
+    far(z=-700 虚化光球+星点) → person(z=-260 真人窗口 person-stage) → mid(z=+40 玻璃卡 per-card 主角)
+    → near(z=+360 锐利碎片)。真人窗口 = `.person-stage`（760×980，顶光束 + REC + 声波）。
+    **满脸/不溢出/9:16 铁律沿用 `neon-grid-hud.html` 头注释。** frame 恒 clean。
+
+  ▌render-harden（从 playground 原稿改了什么 —— 见 playground-gallery/depth-parallax.html）
+    **几乎零改**：原稿已是确定性——所有视差/dolly/orb/光束/声波/碎片/HUD 全是 CSS @keyframes +
+    3D transform（hyperframes 确定性捕获）；远景星点 canvas 原稿**已用种子 LCG PRNG 画一次**（无 rAF/
+    Math.random，注释写「确定性绘制」）→ 原样保留。唯一改动：把 `.person-stage` 里的**假 SVG 剪影**
+    （`<svg class="silhouette">`）换成真 `<video id="bg-video" ...>` 窗口（object-fit:cover 满脸），
+    顶光束/REC/声波保留作窗口 chrome。**无脚本级非确定性。**
+
+  ▌Composition-level：把 playground 原稿整套 #stage/#space 四层 + vignette/grain/HUD + 种子星点脚本照搬，
+    仅 .person-stage 内换真 video。dolly/floatCard/near 视差全保留。
+
+  ▌配色  terracotta #E0894A / #C9743A + 紫 #7860d2 + 青 #4096b4；标题暖白渐变 + 橙 accent；玻璃卡 rgba(22,18,16,.5)
+  ▌字体  标题 'PingFang SC' 800；kicker/sub-en ui-monospace
+
+  Best with: 沉浸/空间感/产品·科技/品牌纵深叙事。运镜本身就是 dolly，卡片建议固定让视差讲故事。
+  尾卡: card-cta 用 terracotta 暖调，保留 rig。
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>style · depth-parallax (纵深视差 · 真人窗口浮在景深里)</title>
+<style>
+  html, body { margin:0; padding:0; background:#07060a; font-family:ui-sans-serif,system-ui,sans-serif; }
+  .stage { position:relative; width:1080px; height:1920px; transform-origin:top left; transform:scale(0.42); overflow:hidden;
+    background:radial-gradient(120% 80% at 50% 8%, #1c1726 0%, #0c0a12 46%, #07060a 100%); }
+  .card-host { position:absolute; left:64px; right:64px; bottom:300px; }
+</style>
+</head>
+<body>
+<div class="stage"><div class="card-host">
+
+<div class="card" data-card-id="ref-depth-parallax">
+  <style>
+    .card[data-card-id="ref-depth-parallax"] .root { --ink:#f6f1ea; --dim:rgba(246,241,234,.62); --faint:rgba(246,241,234,.34);
+      --accent:#E0894A; --accent-deep:#C9743A; --glass:rgba(22,18,16,.50);
+      position:relative; padding:54px 56px 48px; border-radius:34px; container-type:inline-size;
+      background:var(--glass); -webkit-backdrop-filter:blur(26px) saturate(1.25); backdrop-filter:blur(26px) saturate(1.25);
+      border:1.5px solid rgba(255,255,255,.16);
+      box-shadow:0 50px 120px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.3), inset 0 1.5px 0 rgba(255,255,255,.22);
+      color:var(--ink); font-family:'PingFang SC',ui-sans-serif,system-ui,sans-serif; }
+    .card[data-card-id="ref-depth-parallax"] .root::after { content:''; position:absolute; inset:0; border-radius:34px; pointer-events:none;
+      background:linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,0) 38%); mix-blend-mode:screen; }
+    .card[data-card-id="ref-depth-parallax"] .kicker { display:inline-flex; align-items:center; gap:12px;
+      font:600 24px/1 ui-monospace,'SF Mono',monospace; letter-spacing:.24em; text-transform:uppercase; color:var(--accent); }
+    .card[data-card-id="ref-depth-parallax"] .kicker::before { content:''; width:34px; height:3px; border-radius:2px; background:var(--accent); }
+    .card[data-card-id="ref-depth-parallax"] .title { margin-top:26px; font-weight:800; font-size:clamp(72px,9.4cqi,104px); line-height:1.04;
+      letter-spacing:-.02em; background:linear-gradient(180deg,#fff 0%,#f3e7da 60%,#e9c8a6 100%);
+      -webkit-background-clip:text; background-clip:text; color:transparent; overflow-wrap:anywhere; text-wrap:balance;
+      text-shadow:0 2px 30px rgba(224,137,74,.18); }
+    .card[data-card-id="ref-depth-parallax"] .title b { color:var(--accent); -webkit-text-fill-color:var(--accent); }
+    .card[data-card-id="ref-depth-parallax"] .sub-en { margin-top:20px; font:500 30px/1.2 ui-monospace,'SF Mono',monospace;
+      letter-spacing:.04em; color:var(--dim); }
+    .card[data-card-id="ref-depth-parallax"] .rule { height:1.5px; margin:34px 0 28px; border-radius:2px;
+      background:linear-gradient(90deg, var(--accent), rgba(224,137,74,.05)); }
+    .card[data-card-id="ref-depth-parallax"] .takeaway { font-size:clamp(30px,4.6cqi,38px); line-height:1.5; font-weight:500; color:#f1ece4; }
+    .card[data-card-id="ref-depth-parallax"] .takeaway em { font-style:normal; color:var(--accent); font-weight:700; }
+    .card[data-card-id="ref-depth-parallax"] .byline { margin-top:30px; display:flex; align-items:center; gap:16px;
+      font-size:25px; color:var(--faint); letter-spacing:.02em; }
+    .card[data-card-id="ref-depth-parallax"] .byline .avatar { width:46px; height:46px; border-radius:50%; flex:none;
+      background:linear-gradient(135deg,var(--accent),var(--accent-deep)); display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:20px; color:#1a120c; }
+    .card[data-card-id="ref-depth-parallax"] .byline b { color:var(--ink); font-weight:600; }
+    .card[data-card-id="ref-depth-parallax"] .byline .sep { color:rgba(224,137,74,.6); }
+  </style>
+  <div class="root">
+    <span class="kicker" data-anim="fade-in" data-anim-at="0.2" data-anim-duration="0.5">INTERFLOW · 口播</span>
+    <h1 class="title" data-anim="settle" data-anim-at="0.42" data-anim-duration="0.7">一场关于 <b>AI</b><br>的真实对话</h1>
+    <div class="sub-en" data-anim="fade-in" data-anim-at="0.8" data-anim-duration="0.5">an honest conversation about ai</div>
+    <div class="rule" style="width:0" data-anim="grow-x" data-anim-at="0.95" data-anim-duration="0.7" data-anim-target-w="900"></div>
+    <p class="takeaway" data-anim="settle" data-anim-at="1.05" data-anim-duration="0.6">不聊概念，不画大饼——<em>把真实用起来的体感</em>讲给你听。</p>
+    <div class="byline" data-anim="fade-in" data-anim-at="1.3" data-anim-duration="0.5">
+      <span class="avatar">J</span><span><b>Jeff</b> <span class="sep">×</span> <b>卓霖</b></span><span class="sep">·</span><span>现场记录</span>
+    </div>
+  </div>
+</div>
+
+</div></div>
+</body>
+</html>
