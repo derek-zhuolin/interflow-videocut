@@ -10,20 +10,35 @@ the `data-anim` kinds table, and the `card-cta` brand-outro template.
 
 For each card:
 
-1. `cp "$SKILL_DIR/references/styles/<chosenStyle>.html" "$WORK_DIR/public/cards/<card-id>.html"`
+1. `cp "$SKILL_DIR/references/styles/<styleKey>.html" "$WORK_DIR/public/cards/<card-id>.html"`
+   — `<styleKey>` = the card's `styleKey` if set, else the film's **primary**
+   style (see the style-family note in Step 7; accent cards may pull a
+   same-family sibling).
 2. Rename the fragment's `data-card-id="ref-<key>"` to this card's `<card-id>`
    (update the scoped `<style>` selectors + element ids to match).
 3. Swap the placeholder copy for this card's real `contentHints` text, and set
    the accent to the card's `accentIndex`.
-4. Stop there. Do **not** redesign the layout, re-pick fonts, or re-author the
-   ornament — the reference already encodes the curated look. Touch structure
-   only for the rare card whose content (e.g. a 4-way comparison) genuinely
-   doesn't fit the reference's shape.
+4. **Compose, don't just fill — but hold the style's DNA.** The quality floor is
+   the style's **design tokens**, not its fixed arrangement. Keep fixed: the
+   fonts, the theme palette / `var(--accent-N)`, the ornament vocabulary, the
+   spacing scale, and — NON-NEGOTIABLE — the overflow guards (clamp sizing,
+   `max-width`, `overflow-wrap`; see below). **Within that envelope you are free
+   to recompose the fragment to serve this card's point**: promote or demote the
+   emphasis, switch stacked ↔ two-column, move the panel (bottom / centered /
+   side), drop a slot the card doesn't need, change the shape to match the
+   content (a number wants a big figure; a comparison wants two columns; a quote
+   wants centered). Two adjacent cards should **not** be structurally identical
+   when their content differs — sameness across cards is the defect this skill
+   most often ships. Over a talking head, a recomposed block must still **keep
+   the speaker's face clear** (a deliberate full-dim statement beat is the one
+   allowed exception, used sparingly).
 
-Writing a fragment from a blank file is the **exception**, not the routine. The
-contract below documents what a valid fragment looks like (so you can validate a
-clone and author the rare bespoke card) — it is **not** an instruction to build
-every card from scratch.
+What stays off-limits: re-picking fonts, recoloring off the theme, importing a
+foreign ornament, or breaking the overflow contract. Authoring a fragment from a
+blank file is still the **exception**, not the routine — recomposition starts
+from the cloned fragment so the tokens come along for free. The contract below
+documents what a valid fragment looks like (so you can validate a clone, recompose
+it, or author the rare bespoke card).
 
 Each file contains a single rooted HTML fragment that follows this contract:
 

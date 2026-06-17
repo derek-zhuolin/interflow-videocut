@@ -259,6 +259,24 @@ After the user answers (any channel):
    `references/DESIGN_INDEX.md` 的「中文风格词库」表；`recommendedStyle`
    也优先用 `auto-style.py` 输出的 `recommend_cn`（中文名）呈现给用户。
 
+   **2·风格家族 — 主风格锁定，重点卡可配姊妹风格（治「整片一个模子」）.**
+   用户报的那一款是**主风格（primary）**，照旧锁定、绝不替换——这条不变。但「锁主
+   风格」不等于「全片每张卡都长一个样」。你可以给少数**重点卡**（开场 hero / 大数字
+   数据卡 / 收尾 outro）挂一个**同家族的姊妹风格**：在该卡的 storyboard 里写
+   `"styleKey": "<sibling-key>"`，Step 8 就 `cp` 那一款而不是主风格。
+   - **颜色天然一致**：所有 fragment 都用 `var(--accent-N)` 上色，姊妹风格会自动继承
+     当前 theme 调色板，不会撞色——这是这一步安全的根本原因。
+   - **只在同一家族内挑姊妹**（沿用 skill 已有的家族划分：**炸裂族**
+     neon-grid-hud / liquid-aurora / holo-iridescent / cinematic-bloom /
+     kinetic-megatype / depth-parallax；**cinematic** geom / glass / glass-hud /
+     spatial / nebula-glass；**clinical** swiss / minimal / terminal；外加
+     pastel-aura、editorial-print 各自成系，详见 `DESIGN_INDEX.md` 与 frame 矩阵）。
+     跨家族混（极简卡接霓虹卡）即使同色也会结构打架——别这么干。
+   - **克制**：全片最多 2–3 款，主风格仍占大多数卡。姊妹是「重音」，不是「换台」。
+     拿不准就别加——`styleKey` 缺省 = 主风格，这是安全默认。
+   - 这不违反上面的「确定性原则」：主风格仍由用户锁定，姊妹只是显式写进 storyboard 的
+     有界扩展（同 seed 仍逐字节可复现）。若用户明确说了「就一款别花」，全片只用主风格。
+
    **2a. 复杂度档位（炸裂档专属第二轮问题）** — 当用户选了 `neon-grid-hud`（或任何
    「炸裂」族风格）时，**紧接着再发一轮 `AskUserQuestion` 问 A/B/C 复杂度档**（这是
    Derek 要的「问细一点」）。把组件清单写进 description，让用户看清每档叠什么：

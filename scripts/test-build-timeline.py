@@ -149,6 +149,50 @@ class TestGen(unittest.TestCase):
         self.assertEqual(first, second)
 
 
+class TestMotionVariety(unittest.TestCase):
+    """Seeded per-card motion: varied between cards, reproducible per seed."""
+
+    frags = {f"card-0{i}": f'<div class="card" data-card-id="card-0{i}">'
+                           f'<div class="root"><h1>{i}</h1></div></div>' for i in range(1, 4)}
+    cards = [
+        {"id": "card-01", "startSec": 1.0, "endSec": 11.0, "zone": "fullscreen"},
+        {"id": "card-02", "startSec": 10.45, "endSec": 20.0, "zone": "fullscreen"},
+        {"id": "card-03", "startSec": 19.45, "endSec": 29.0, "zone": "fullscreen"},
+    ]
+
+    def _gen(self, seed):
+        work = make_work(self.cards, self.frags)
+        sbp = os.path.join(work, "storyboard.json")
+        with open(sbp) as f:
+            sb = json.load(f)
+        sb["composition"]["seed"] = seed
+        with open(sbp, "w") as f:
+            json.dump(sb, f)
+        with redirect_stderr(io.StringIO()):
+            bt.gen(work, 0.55)
+        return out_of(work)
+
+    def test_adjacent_cards_enter_differently(self):
+        html = self._gen(0)
+        # card-01 → gesture[0] (y:120), card-02 → gesture[1] (y:-110): not identical
+        self.assertIn('data-card-id="card-01"]\', { opacity: 0, y: 120', html)
+        self.assertIn('data-card-id="card-02"]\', { opacity: 0, y: -110', html)
+
+    def test_same_seed_is_byte_identical(self):
+        self.assertEqual(self._gen(7), self._gen(7))
+
+    def test_different_seed_reshuffles(self):
+        # seed 1 shifts every card's gesture by one → card-01 now uses gesture[1]
+        self.assertIn('data-card-id="card-01"]\', { opacity: 0, y: -110', self._gen(1))
+
+    def test_all_gestures_land_on_clean_rest_state(self):
+        html = self._gen(2)
+        # every enter must reset x AND y so a sideways gesture lands square
+        for line in html.splitlines():
+            if "tl.fromTo('.card-host" in line and "opacity: 1" in line:
+                self.assertIn("x: 0, y: 0", line)
+
+
 class TestValidation(unittest.TestCase):
     def test_short_card_warns(self):  # Fix B
         cards = [

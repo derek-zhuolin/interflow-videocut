@@ -9,10 +9,13 @@ Interflow Video Cut converts a local video into a card-based composition: the
 agent designs the cards (timing + content), assembles one composition HTML, and
 renders it to MP4 via `hyperframes`.
 
-**Default authoring mode: clone-and-fill, not free-design.** Per card, start from
-a shipped fragment (`references/styles/<key>.html`) and **swap only text +
-accent** — the fast path that holds every card at the curated quality floor.
-Hand-authoring from scratch is the **exception**, only when content fits no reference.
+**Default authoring mode: clone-and-recompose, not free-design.** Per card, start
+from a shipped fragment (`references/styles/<key>.html`); always swap the text +
+accent, and **recompose its layout freely to serve the card's point — while
+holding the style's DNA fixed** (fonts, theme palette, ornament, spacing scale,
+overflow guards). Cloning anchors the quality floor in the style's *tokens*, not
+in a frozen arrangement, so adjacent cards need not look identical. Hand-authoring
+from a blank file is the **exception**, only when content fits no reference.
 
 ## CLI Resolution
 
@@ -37,6 +40,7 @@ from the library, don't reinvent.
 | `references/styles/*.html` | self-contained style fragments — **clone these**; includes the 炸裂族 (neon-grid-hud / liquid-aurora / holo-iridescent + playground-gallery DNA) | Step 7 / 8 |
 | `references/layouts/*.html` | layout skeletons (videoBounds + cardBounds, landscape/portrait); neon-grid-hud carries its own window-scene | Step 7 / 9 |
 | `references/frames/*.html` | 3 frame chrome fragments (clean / hairline / polaroid) | Step 9 |
+| `references/curve-motion/README.md` | **可选视觉增强** — 数学曲线母题：背景氛围底 + textPath 排字 / clip-path 裁图剪影 / 采样点布点 + 沿曲线丝滑入场漂移（`curveIn`/`curveBob`）。全闭式 `draw(t)`、确定性 seek 安全；配暗底风格（nebula-glass/glass/spatial/geom），不叠 glass-hud/swiss/minimal | Step 7 / 8 / 9（想加高级动态质感时） |
 
 ## Workflow
 
@@ -168,6 +172,7 @@ the composition you author in Step 9:
 | `contentHints` | object | free-form bag; agent puts kicker/title/detail/data/quote here |
 | `archetype` (optional) | string | free-form label you may attach to remember a card's pattern; absent = free-form, which is the default |
 | `transition` (optional) | enum: `cut` \| `fade` \| `slide` \| `wipe` | declarative card-to-card transition |
+| `styleKey` (optional) | string (a `references/styles/<key>`) | which style fragment to clone this card from. Absent = the film's **primary** style. Set it only on **accent cards** (hero / big-number / outro) to pull a tonally-compatible **sibling** style — see the style-family note in Step 7. Colors stay coherent automatically: every fragment paints from `var(--accent-N)`, so a sibling inherits the theme palette. |
 
 **Five `zone` values** (resolve to card-host pixel bounds in Step 9; full bounds
 table in `references/composition-assembly.md`): `fullscreen` (whole canvas —
@@ -269,16 +274,17 @@ the storyboard render contract — is in
 [`references/render-strategy.md`](references/render-strategy.md). Read it now.**
 
 After resolving, state back what you chose in one sentence (ratio + canvas size,
-layout, specific style, frame, final cardCount, rhythm), then proceed.
+layout, primary style + any sibling accent styles, frame, final cardCount,
+rhythm), then proceed.
 
 ### 8. Write Each Card's HTML
 
 **Clone-first (the default).** For each card:
 
-1. `cp "$SKILL_DIR/references/styles/<chosenStyle>.html" "$WORK_DIR/public/cards/<card-id>.html"`
+1. `cp "$SKILL_DIR/references/styles/<styleKey>.html" "$WORK_DIR/public/cards/<card-id>.html"` — `<styleKey>` is the card's `styleKey` if set, else the film's **primary** style (see the style-family note in Step 7: most cards use the primary; accent cards may pull a tonally-compatible sibling).
 2. Rename the fragment's `data-card-id="ref-<key>"` to this card's `<card-id>` (update the scoped `<style>` selectors + element ids).
 3. Swap the placeholder copy for this card's real `contentHints`, set the accent to the card's `accentIndex`.
-4. Stop there. Don't redesign the layout, re-pick fonts, or re-author the ornament — the reference encodes the curated look. Touch structure only for the rare card whose content genuinely doesn't fit.
+4. **Compose, don't just fill — but hold the style's DNA.** The floor is the style's design tokens (fonts, theme palette / `var(--accent-N)`, ornament, spacing scale) + the overflow guards — keep those fixed. Within that envelope you're free to **recompose the fragment to serve this card's point**: promote/demote emphasis, switch stacked ↔ two-column, move the panel (bottom / centered / side), drop an unused slot, let shape follow content. Two adjacent cards should NOT be structurally identical when their content differs. Off-limits: re-picking fonts, off-theme color, foreign ornament, breaking overflow safety. Over a talking head, keep the speaker's face clear (a deliberate full-dim statement beat is the rare exception). Full guidance in `references/card-contract.md`.
 
 Authoring a fragment from a blank file is the **exception**. Animations are
 **declared, not coded** — use `data-anim-*` attributes only; never write

@@ -18,6 +18,13 @@ coupled and a wrong guess is a visible defect:
     in storyboard.json; the script then emits a reframe tween at that card's
     slip point. Cards without videoBounds leave the video where it was.
 
+What it DOES vary (so the film stops feeling metronomic): each card's entrance
+gesture and ambient-drift axis/amplitude are chosen deterministically from
+(composition.seed + card index). Same seed → byte-identical output (the
+reproducibility contract holds); change composition.seed to reshuffle the whole
+film's rhythm. Every gesture lands on the same resting state and touches only
+transform + filter (never layout props), so overflow safety is untouched.
+
 Usage:
   python3 build-timeline.py --work "$WORK_DIR" [--slip 0.55]
 
@@ -31,7 +38,31 @@ import re
 import sys
 
 SLIP_DEFAULT = 0.55
-DRIFT_PERIOD = 11  # seconds per ambient-drift leg
+DRIFT_PERIOD = 11  # seconds per ambient-drift leg (legacy default / fallback)
+
+# --- per-card motion variety (deterministic from seed + index) ------------
+# Each tuple = (from-vars literal, ease, duration). All gestures land on the
+# SAME resting state and animate transform+filter only — never width/height/
+# margin — so the overflow contract is unaffected. Picked by (seed + i) so the
+# output stays byte-reproducible while cards no longer arrive identically.
+ENTER_GESTURES = [
+    ("{ opacity: 0, y: 120, filter: 'blur(16px)', scale: 0.94 }", "expo.out", 0.70),   # sink up
+    ("{ opacity: 0, y: -110, filter: 'blur(14px)', scale: 0.96 }", "expo.out", 0.70),  # drop down
+    ("{ opacity: 0, x: -140, filter: 'blur(14px)', scale: 0.97 }", "power3.out", 0.72),  # slide from left
+    ("{ opacity: 0, x: 140, filter: 'blur(14px)', scale: 0.97 }", "power3.out", 0.72),   # slide from right
+    ("{ opacity: 0, scale: 0.82, filter: 'blur(18px)' }", "expo.out", 0.75),           # zoom in
+    ("{ opacity: 0, y: 70, filter: 'blur(22px)', scale: 0.975 }", "power3.out", 0.80),  # soft focus-pull
+]
+# Ambient drift variants — (axis, amplitude, period). Kept inside the motion
+# guardrail (≤12px translate / ≤0.6° rotate, 9–14s period) so nothing pulses in
+# lockstep yet nothing out-moves the speaker.
+DRIFT_VARIANTS = [
+    ("y", 10, 11),
+    ("y", 8, 13),
+    ("x", 9, 12),
+    ("rotate", 0.5, 12),
+    ("y", 12, 9),
+]
 
 # --- markers in the shell -------------------------------------------------
 HOSTS_MARKER = "<!-- INJECT-CARD-HOSTS -->"
@@ -202,6 +233,7 @@ def gen(work, slip):
     W = comp.get("width", 1920)
     H = comp.get("height", 1080)
     comp_dur = comp.get("durationSeconds", 0)
+    seed = int(comp.get("seed", 0) or 0)
     cards = sb.get("cards", [])
     if not cards:
         sys.exit("build-timeline: storyboard has no cards")
@@ -242,18 +274,30 @@ def gen(work, slip):
             tl_lines.append(
                 f"    tl.to('#video-wrap', {{ left: {fnum(vb['left'])}, top: {fnum(vb['top'])}, "
                 f"width: {fnum(vb['width'])}, height: {fnum(vb['height'])}, duration: 0.7, ease: 'power3.inOut' }}, {ds:.4f});")
-        # enter
+        # enter — gesture chosen deterministically from (seed, card index): the
+        # film stays byte-reproducible, but adjacent cards no longer arrive the
+        # same way (kills the metronome feel). Resting state resets x/y/scale/
+        # filter so any gesture lands clean.
+        g_from, g_ease, g_dur = ENTER_GESTURES[(seed + i) % len(ENTER_GESTURES)]
         tl_lines.append(
             f"    tl.set('.card-host[data-card-id=\"{cid}\"]', {{ visibility: 'visible' }}, {ds:.4f});")
         tl_lines.append(
             f"    tl.fromTo('.card-host[data-card-id=\"{cid}\"]', "
-            f"{{ opacity: 0, y: 120, filter: 'blur(16px)', scale: 0.94 }}, "
-            f"{{ opacity: 1, y: 0, filter: 'blur(0px)', scale: 1, duration: 0.7, ease: 'expo.out' }}, {ds:.4f});")
-        # ambient drift (finite repeat)
-        rep = f"Math.ceil(compDurationSec / {DRIFT_PERIOD})"
+            f"{g_from}, "
+            f"{{ opacity: 1, x: 0, y: 0, filter: 'blur(0px)', scale: 1, duration: {g_dur}, ease: '{g_ease}' }}, {ds:.4f});")
+        # ambient drift (finite repeat) — axis/amp/period also rotate per card,
+        # inside the ≤12px / ≤0.6° guardrail, so nothing breathes in lockstep.
+        d_axis, d_amp, d_period = DRIFT_VARIANTS[(seed + i) % len(DRIFT_VARIANTS)]
+        if d_axis == "rotate":
+            d_prop = f"rotation: '+={d_amp}'"
+        elif d_axis == "x":
+            d_prop = f"x: '+={d_amp}'"
+        else:
+            d_prop = f"y: '+={d_amp}'"
+        rep = f"Math.ceil(compDurationSec / {d_period})"
         tl_lines.append(
             f"    tl.to('.card[data-card-id=\"{cid}\"] .root', "
-            f"{{ y: '+=10', duration: {DRIFT_PERIOD}, ease: 'sine.inOut', repeat: {rep}, yoyo: true }}, {ds:.4f});")
+            f"{{ {d_prop}, duration: {d_period}, ease: 'sine.inOut', repeat: {rep}, yoyo: true }}, {ds:.4f});")
         # internal anims (compiled from the card's data-anim attributes)
         for a in extract_anims(frag):
             at = float(a.get("data-anim-at", 0.3) or 0.3)
