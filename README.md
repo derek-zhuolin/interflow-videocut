@@ -214,10 +214,10 @@ Interflow Video Cut 在底层也直接调用了他维护的 `@notedit/vtake` CLI
 
 > *Inspired by and built on top of [vtake](https://github.com/notedit/vtake-skills) by [Leo Xiang (@notedit)](https://github.com/notedit).*
 
-**致敬归藏（[@op7418](https://github.com/op7418)）。** 本 skill 几个旗舰暗调风格——**暗夜星河** `nebula-glass`、**暖光太空** `spatial`——的排版骨架，仓库里统称「**归藏排版**」：那套「强字阶 + 超大空心序号 + 发丝线 + letter-spaced 英文 meta + 取景框 chrome」的瑞士／杂志式排版语言，DNA 直接取自归藏的
+**致敬归藏（[@op7418](https://github.com/op7418)）。** 本 skill 多处视觉灵感都建立在归藏的视觉 DNA 之上——尤其**瑞士网格** `swiss`，以及仓库里统称「**归藏排版**」的旗舰暗调风格（**暗夜星河** `nebula-glass`、**暖光太空** `spatial`）：那套「强字阶 + 超大空心序号 + 发丝线 + letter-spaced 英文 meta + 取景框 chrome」的瑞士／杂志式排版语言，DNA 直接取自归藏的
 **[guizang-social-card-skill](https://github.com/op7418/guizang-social-card-skill)**（Editorial × Swiss 视觉系统）——是他把这种克制、网格化、高信息密度又高级的排版美学在中文设计圈带火。我们在它之上叠了粒子场、玻璃面板和动效，但骨子里的字阶与留白是他的审美。横屏分享尤其推荐这条简洁归藏风。
 
-> *Type & layout DNA of the dark flagship styles inspired by [guizang-social-card-skill](https://github.com/op7418/guizang-social-card-skill) by [归藏 (@op7418)](https://github.com/op7418).*
+> *Swiss / editorial type & layout DNA — `swiss`, `nebula-glass`, `spatial` — inspired by [guizang-social-card-skill](https://github.com/op7418/guizang-social-card-skill) by [归藏 (@op7418)](https://github.com/op7418).*
 
 ---
 
