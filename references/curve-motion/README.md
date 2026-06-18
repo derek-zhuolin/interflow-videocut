@@ -86,6 +86,5 @@ CurveMotion.curveBob(tl, '#card-03-title', { curve:'lemniscate', amp:9, period:9
 
 ---
 
-可视化 playground（浏览器预览全部曲线 + 排版/图片/动效 demo）在
-`~/.claude/assets/interflow-curve-atmosphere/`（`preview.html` / `applications.html` /
-`motion-demo.html`）。
+全部曲线函数与动效组件就在本目录的 `curve-atmosphere.js` 和 `curve-motion.js` 里，
+直接读源码即可；浏览器可视化 playground（曲线总览 + 排版/图片/动效 demo）未随本仓库打包。

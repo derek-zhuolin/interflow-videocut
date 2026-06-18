@@ -36,8 +36,17 @@ input.mp4
 
 ## 安装
 
-1. 把整个 `interflow-video-cut/` 文件夹放进你的 Agent skills 目录
-   （Claude Code / Codex 等：`~/.claude/skills/`、`~/.agents/skills/` 等）。
+1. 把本仓库 clone 进你的 Agent skills 目录，**文件夹名固定为 `interflow-video-cut`**
+   （要和 SKILL.md 里的 `name:` 一致，skill 才能被正确识别）：
+
+   ```bash
+   # Claude Code / Codex 等通用：~/.claude/skills/ 或 ~/.agents/skills/
+   cd ~/.claude/skills
+   git clone https://github.com/derek-zhuolin/interflow-video-cut.git interflow-video-cut
+   ```
+
+   > clone 时末尾的 `interflow-video-cut` 就是目标文件夹名，别省略——
+   > 否则会落成默认的仓库名，导致文件夹名和 skill `name` 对不上。
 2. 确保系统已装依赖（见下）。
 3. 在对话里说「用 interflow-video-cut 剪这条视频 /path/to/video.mp4」即可。
 
@@ -75,13 +84,15 @@ input.mp4
 |---|---|
 | **暗调电影感**（黑底·高级·有动态） | **暗夜星河** `nebula-glass`（旗舰：黑底双星粒子场 + 玻璃 + 归藏排版，最高级最科技）· **玻璃拟态** `glass`（简单两色 + 磨砂玻璃，半透明干净）· **暖玻 HUD** `glass-hud`（暖玻璃面板浮在真人口播上 + 章节条 + 双语字幕，橙色 accent，口播枚举/护城河清单专用）· **暖光太空** `spatial`（黑底暖橙光，温暖有空间感）· **撞色大字** `geom`（黑底亮色块超大字，大胆有冲击） |
 | **干净专业**（数据·报告·严肃） | **瑞士网格** `swiss`（白底红点大字，专业权威）· **黑白极简** `minimal`（纯黑白大字 + 大留白）· **代码终端** `terminal`（黑底绿字代码风，技术极客） |
-| **浅色清爽**（日常·白天·轻松） | **柔光浅色** `pastel-aura`（浅色柔和，白天/日常感） || **杂志素材**（作品集·素材排版） | **杂志印刷** `editorial-print`（把照片/素材排成杂志跨页，不是文字卡） |
+| **浅色清爽**（日常·白天·轻松） | **柔光浅色** `pastel-aura`（浅色柔和，白天/日常感） |
+| **杂志素材**（作品集·素材排版） | **杂志印刷** `editorial-print`（把照片/素材排成杂志跨页，不是文字卡） |
 
 完整中文词库、布局/边框矩阵、组合建议、自动日夜匹配规则见 [`references/DESIGN_INDEX.md`](references/DESIGN_INDEX.md)。
 每种风格都是一个自包含的 HTML 参考卡，可直接复制改写。两个特别说明：
 
 - **暗夜星河 `nebula-glass`** 的粒子场是 composition 级**确定性 canvas**（写成时间闭式 `pos=f(t)` 并由 GSAP 时间轴驱动，逐帧可复现），整段可粘贴的配方在它的文件头注释里。
-- **杂志印刷 `editorial-print`** 是唯一的「素材驱动」风格——多素材排版原语、签名转场、素材入栈规则在 [`references/editorial-print-montage.md`](references/editorial-print-montage.md)。- **3D 卡片轮播 `deck`** 是新加的布局（不是风格）：卡片本身是主角，一张正对、左右两张退到 3D 扇形里像 cover-flow 轮转，替代默认的 slip 转场；配 `pastel-aura` / `glass` 铺天空底最好看。扇形三槽位 + advance 补间在 [`references/layouts/deck.html`](references/layouts/deck.html)。
+- **杂志印刷 `editorial-print`** 是唯一的「素材驱动」风格——多素材排版原语、签名转场、素材入栈规则在 [`references/editorial-print-montage.md`](references/editorial-print-montage.md)。
+- **3D 卡片轮播 `deck`** 是新加的布局（不是风格）：卡片本身是主角，一张正对、左右两张退到 3D 扇形里像 cover-flow 轮转，替代默认的 slip 转场；配 `pastel-aura` / `glass` 铺天空底最好看。扇形三槽位 + advance 补间在 [`references/layouts/deck.html`](references/layouts/deck.html)。
 - **陈列墙 `showcase`** 是新加的布局：下方口播 pip 常驻 + 上方「案例证据墙」不断累积重排（竖屏 B-roll 卡 1→2→3→网格，红标签 + 观看数 chip + 网格纸底），口播会从底部小窗突然放大全屏再缩回、上方一直滚动播放。**素材驱动**（每张墙卡是喂进来的竖屏片段），多视频源机制复用 [`references/editorial-print-montage.md`](references/editorial-print-montage.md)；三段动效配方在 [`references/layouts/showcase.html`](references/layouts/showcase.html)。
 
 ## 换成你自己的品牌落款
@@ -129,7 +140,7 @@ input.mp4
 **[vtake](https://github.com/notedit/vtake-skills)** —— 是他先跑通了「用 Claude Code 一键剪口播视频」这条路。
 Interflow Video Cut 在底层也直接调用了他维护的 `@notedit/vtake` CLI 做转录与抽取。
 
-在此基础上，本项目重做了卡片设计系统（9 种精选视觉风格 + 自动日夜配色匹配）、布局 / 画幅决策流程和俱乐部落款。感谢 Leo 的开源。
+在此基础上，本项目重做了卡片设计系统（10 种精选视觉风格 + 自动日夜配色匹配）、布局 / 画幅决策流程和俱乐部落款。感谢 Leo 的开源。
 
 > *Inspired by and built on top of [vtake](https://github.com/notedit/vtake-skills) by [Leo Xiang (@notedit)](https://github.com/notedit).*
 
