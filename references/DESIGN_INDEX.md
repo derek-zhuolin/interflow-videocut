@@ -62,12 +62,22 @@ exist in the real schema; the strict v3 schema only has `card.zone`.)
 | **代码终端** | `terminal` | 黑底绿字代码风，技术、极客、工程感 | 代码 · 终端 · 技术 · 编程 · 极客 |
 | **柔光浅色** | `pastel-aura` | 浅色柔和不刺眼，日常、白天、轻松（白天锚点） | 浅色 · 柔和 · 清爽 · 日常 · 温柔 |
 | **杂志印刷** | `editorial-print` | 把照片/素材排成杂志跨页（不是文字卡） | 杂志 · 印刷 · 作品集 · 大事记 · 排版 |
-**4 大类（选风格题就按这个分）：**
-- **暗调电影感**（黑底·高级·有动态）= 霓虹网格（炸裂档默认）/ 暗夜星河 / 玻璃拟态 / 暖玻 HUD / 暖光太空 / 撞色大字
-- **干净专业**（数据·报告·严肃）= 瑞士网格 / 黑白极简 / 代码终端
-- **浅色清爽**（日常·白天·轻松）= 柔光浅色- **杂志素材**（作品集·素材排版）= 杂志印刷
+**两大家族（顶层先选这个）：**
 
-> 自动匹配（`auto-style.py`）也按中文名回报：亮视频→柔光浅色/瑞士网格；
+**① 简洁排版类 · 歸藏家族** —— 排版主导、克制、无 canvas。一整套纪律统管
+（字号字重耦合 + 预设调色板 + 组件库 + 模块化网格），规范见
+[styles/guizang-dna.md](styles/guizang-dna.md)，组件定义见
+[styles/guizang-clean.css](styles/guizang-clean.css)，交付质检
+[styles/guizang-checklist.md](styles/guizang-checklist.md)。分两根支柱（一片一根，永不混）：
+- **Swiss 支柱**（讲解·数据·权威·工程）= 瑞士网格 `swiss` / 黑白极简 `minimal` / 代码终端 `terminal`
+- **Editorial 支柱**（叙事·编辑·有温度·图为主角）= 杂志印刷 `editorial-print` / 柔光浅色 `pastel-aura`
+
+**② 视觉特效类** —— canvas / 玻璃 / 粒子驱动，极限吸睛（不归歸藏纪律管）：
+- **暗调电影感**（黑底·高级·有动态）= 暗夜星河 `nebula-glass` / 玻璃拟态 `glass` / 暖玻 HUD `glass-hud` / 暖光太空 `spatial` / 撞色大字 `geom`
+- **炸裂族**（window-scene·特效在人后）= 霓虹网格 `neon-grid-hud`（炸裂档默认）/ 流光极光 / 全息虹彩 / 电影光影 / 动态巨字 / 纵深视差
+
+> 选风格类型时先在这两大家族里定方向：要「排版讲清楚」走歸藏家族，要「视觉先抓人」走特效类。
+> 自动匹配（`auto-style.py`）按中文名回报：亮视频→柔光浅色/瑞士网格；
 > 暗+冷视频→暗夜星河/玻璃拟态；暗+暖视频→暖光太空/暖玻 HUD；暗+中性→暖玻 HUD/暗夜星河。
 
 ### 炸裂族（dramatic / playground 风格 —— 想要「夸张视觉」时在选风格题里加这一组）
@@ -96,14 +106,14 @@ render-harden checklist 加固成确定性版本**（neon 是范本）。原稿 
 | `minimal` | [styles/minimal.html](styles/minimal.html) | pure black/white · huge type · generous space | `#000` | Inter |
 | `geom` | [styles/geom.html](styles/geom.html) | black ground · ONE electric accent · oversized bold type · crisp geometry | `#d4ff3a` | Inter bold |
 | `terminal` | [styles/terminal.html](styles/terminal.html) | dark · monospace · ASCII border · prompt cursor | `#4ade80` | mono |
-| `swiss` | [styles/swiss.html](styles/swiss.html) | white · Helvetica · strict double rules · red accent | `#e8190f` | Helvetica/Inter |
-| `pastel-aura` ★ | [styles/pastel-aura.html](styles/pastel-aura.html) | ivory + mint/lavender/peach aura gradients · serif headlines · white floating cards | `#A98F5E` | Georgia + Songti SC serif |
+| `swiss` ▦ | [styles/swiss.html](styles/swiss.html) | 歸藏·Swiss 支柱 · 暖白 · 12 列网格 · 越大越细 · 单 accent + stat-card 数据纪律 | `#002FA7` IKB（默认；lemon/lime/safety/swiss-red 可选）| Inter/Helvetica |
+| `pastel-aura` ★ | [styles/pastel-aura.html](styles/pastel-aura.html) | 歸藏·Editorial 支柱（sans 日间变体）· 象牙底 + 冷 aurora 渐变 · 现代 sans 800 标题 · 悬浮白卡 | `#5E6AD2` periwinkle | Inter + PingFang SC |
 | `glass` ✦ | [styles/glass.html](styles/glass.html) | **玻璃拟态 glassmorphism** · simple two-color gradient · prominent frosted-glass panel · cool palette · film grain | `#5B8CFF` | Inter + PingFang SC |
 | `glass-hud` ✺ | [styles/glass-hud.html](styles/glass-hud.html) | **暖玻 HUD** · warm-neutral frosted panel floating **over the live talking-head** · top chapter rail · bottom scrubber + bilingual caption · mono EN labels · numbered list w/ right-aligned notes | `#E0894A` | PingFang SC + ui-monospace |
 | `spatial` ✶ | [styles/spatial.html](styles/spatial.html) | single warm-dark atmosphere · faux-3D floating panel (perspective + double shadow) · warm rim light · viewfinder corner chrome · grain + halftone | `#FF8A4C` | Inter + PingFang SC + mono meta |
 | `nebula-glass` ✸ | [styles/nebula-glass.html](styles/nebula-glass.html) | pure-black deep space · twin flow-field particle stars (silver + electric-blue hot-core) · frosted-glass panel · Swiss/Guizang type (hollow giant numeral, hairline rules) · viewfinder chrome | `#5B8CFF` | Inter + PingFang SC |
 | `neon-grid-hud` ✹ | [styles/neon-grid-hud.html](styles/neon-grid-hud.html) | **炸裂档** cyberpunk · talking-head in a NEON WINDOW with perspective grid floor + rising particles + HUD readouts + giant glowing title — **effects live BEHIND the window, never on the face** · own window-scene layout · A/B/C complexity tiers | `#00fff0` | Inter + PingFang SC + mono |
-| `editorial-print` ◆ | [styles/editorial-print.html](styles/editorial-print.html) | warm paper · 3px ink borders · HARD offset shadow (no blur) · grain · ghost serif · hand-drawn arrow — an **asset montage**, not a text card | `#16140F` | serif headline + Inter labels |
+| `editorial-print` ◆ | [styles/editorial-print.html](styles/editorial-print.html) | 歸藏·Editorial 支柱 · 暖纸 + 2.5px 墨边 + 硬投影 + grain + ghost serif · serif 承重标题 + mono kicker — an **asset montage**, not a text card | `#0a0a0b` ink（5 套墨调预设）| serif headline + mono labels |
 ★ `pastel-aura` — light/soft branch: ivory + pastel aurora gradients, serif
 headlines, white floating cards. Best for 个人分享 / brand storytelling /
 AI·SaaS tone. Pairs well with `pip` or `stack`; pip uses a white-ring pill.
@@ -146,7 +156,10 @@ tiny pip on top + a panel sunk at the bottom leaves a dead band in the middle.)
 This whole composition (atmosphere on `#stage` + pip + transparent cards + GSAP)
 is fully worked out in SKILL.md Step 9 — copy that template.
 
-✸ `nebula-glass`（暗场星云 · 磨砂玻璃 · 歸藏排版）— 三股 DNA 融合：**flow-field
+✸ `nebula-glass`（暗场星云 · 磨砂玻璃 · 借歸藏字阶）— **它属于「视觉特效类」**
+（有 composition 级 canvas 粒子场），不进歸藏家族；但它的文字排版**借用歸藏 Swiss 的
+字阶纪律**（强字阶、超大空心序号、发丝线、letter-spaced mono meta）。需要这套纪律时
+读 [styles/guizang-dna.md](styles/guizang-dna.md) 的字号字重耦合段。三股 DNA 融合：**flow-field
 双星粒子场**（黑底 + 银白星 + 电光蓝热核星 + 拖丝，呼应 Velo/fable 类粒子模型的
 沉浸能量感）+ **磨砂玻璃面板**（沿用 glass 的 backdrop-blur DNA）+ **歸藏式
 瑞士排版**（强字阶、超大空心序号、发丝线、letter-spaced 英文 meta、取景框 chrome）。
@@ -349,7 +362,10 @@ flip the long axis: `split` becomes top/bottom, `pip` video bubble shrinks
    stay readable
 4. **No `on*=` inline handlers**
 5. **CSS variables for colors** when you want a card to switch theme cleanly;
-   inline hex when you want this specific style's signature look
+   inline hex when you want this specific style's signature look.
+   **例外 · 歸藏家族**（swiss/minimal/terminal/editorial-print/pastel-aura）：配色
+   只能取自 [styles/guizang-dna.md](styles/guizang-dna.md) 预设表，**禁自定义 hex**，
+   accent 经 `--accent` token；交付前跑 `node scripts/validate-clean-card.mjs` 自检。
 
 If a reference uses a font you don't have, fall back:
 - Playfair Display / Noto Serif SC → `ui-serif, "Songti SC", "Times New Roman", serif`

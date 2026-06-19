@@ -1,6 +1,10 @@
 <!--
   Style: terminal — dark · monospace CLI · 冷调 phosphor · 工程严谨
   ─────────────────────────────────────────────────────────────────────
+  歸藏家族 · Swiss 支柱（host class .pillar-swiss）。读 guizang-dna.md。
+  family 里唯一的暗底成员——但它 mono-native、收得极紧、层级清晰，与歸藏
+  Swiss 纪律同源（mono 标签 + 网格 + 负空间）。phosphor green 即本风格的
+  accent（var(--accent)）；其余配色全冷调、preset 之外不另立。
   身份：暗底等宽 CLI，工程师的严谨感。不是玩具终端 —— 靠层级 + 网格 +
   负空间 + 一条 vim 式状态栏撑起「精密工程工具」的质感。配色全冷调、收得很紧。
 
@@ -53,6 +57,7 @@
       --bg: #0a0e14; --panel: #0d1219; --ink: #e6edf3;
       --muted: #5c6b7a; --faint: #2a333f;
       --green: #4ade80; --teal: #5eead4; --blue: #7aa2f7;
+      --accent: #4ade80; --accent-on: #06120a;   /* phosphor green = family accent */
       --font-mono: ui-monospace, "SF Mono", "Menlo", "Courier New", monospace;
 
       width: 1920px; height: 1080px; position: relative; overflow: hidden;
@@ -154,7 +159,7 @@
     .card[data-card-id="ref-terminal"] .statusbar .right { color: var(--teal); border-left: 1px solid var(--faint); }
   </style>
 
-  <div class="root">
+  <div class="root pillar-swiss">
     <div class="frame"></div>
     <span class="titlebar"><span class="gd"></span>~/takeaways/takeaway-007.md</span>
 

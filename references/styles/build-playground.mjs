@@ -102,20 +102,19 @@ const META = [
   { key: 'glass-hud', cn: '暖玻 HUD', group: '暗调电影感', accent: '#E0894A', when: '暖玻璃面板浮在真人口播上 + 顶部章节条 + 底部进度轴双语字幕，橙色 accent', tags: ['口播', '叠加', '章节条', '双语字幕', 'terracotta'] },
   { key: 'spatial', cn: '暖光太空', group: '暗调电影感', accent: '#FF8A4C', when: '黑底+暖橙光，温暖又有空间感（唯一的暖黑底）', tags: ['暖光', '深空', '温暖', '人物', '治愈'] },
   { key: 'geom', cn: '撞色大字', group: '暗调电影感', accent: '#D4FF3A', when: '黑底+亮色块+超大字，大胆有冲击力', tags: ['撞色', '大字', '态度', '宣言', '潮'] },
-  { key: 'swiss', cn: '瑞士网格', group: '干净专业', accent: '#E8190F', when: '白底+红点+大字，干净、专业、权威', tags: ['瑞士', '网格', '报告', '数据', '严肃'] },
-  { key: 'minimal', cn: '黑白极简', group: '干净专业', accent: '#000000', when: '纯黑白大字+极致留白，高级、克制', tags: ['极简', '黑白', '留白', '金句', '高级'] },
-  { key: 'terminal', cn: '代码终端', group: '干净专业', accent: '#4ADE80', when: '黑底绿字代码风，技术、极客、工程感', tags: ['代码', '终端', '技术', '编程', '极客'] },
-  { key: 'pastel-aura', cn: '柔光浅色', group: '浅色清爽', accent: '#5E6AD2', when: '浅色柔和不刺眼，日常、白天、轻松（白天锚点）', tags: ['浅色', '柔和', '清爽', '日常', '温柔'] },
-  { key: 'editorial-print', cn: '杂志印刷', group: '杂志素材', accent: '#16140F', when: '把照片/素材排成杂志跨页（不是文字卡）', tags: ['杂志', '印刷', '作品集', '大事记', '排版'] }
+  { key: 'swiss', cn: '瑞士网格', group: '歸藏·Swiss', accent: '#002FA7', when: '暖白 + 12 列网格 + 越大越细 + 单 accent，数据/报告/权威（歸藏 Swiss 支柱）', tags: ['瑞士', '网格', '数据', 'IKB', '权威'] },
+  { key: 'minimal', cn: '黑白极简', group: '歸藏·Swiss', accent: '#0A0A0A', when: '纯黑白巨字 + 极致留白，高级、克制（歸藏里唯一反向耦合的巨字）', tags: ['极简', '黑白', '留白', '金句', '高级'] },
+  { key: 'terminal', cn: '代码终端', group: '歸藏·Swiss', accent: '#4ADE80', when: '黑底绿字代码风，技术、极客、工程感（mono-native 的 Swiss 成员）', tags: ['代码', '终端', '技术', '编程', '极客'] },
+  { key: 'editorial-print', cn: '杂志印刷', group: '歸藏·Editorial', accent: '#0A0A0B', when: 'serif 承重 + 暖墨纸 + 硬投影，把素材排成杂志跨页（歸藏 Editorial 支柱）', tags: ['杂志', '印刷', '作品集', 'serif', '排版'] },
+  { key: 'pastel-aura', cn: '柔光浅色', group: '歸藏·Editorial', accent: '#5E6AD2', when: '象牙底 + 冷 aurora + 现代 sans 标题，日常、白天（Editorial 的 sans 日间变体）', tags: ['浅色', '柔和', '清爽', '日常', '温柔'] }
 ]
 
-const GROUP_ORDER = ['炸裂特效', '暗调电影感', '干净专业', '浅色清爽', '杂志素材']
+const GROUP_ORDER = ['炸裂特效', '暗调电影感', '歸藏·Swiss', '歸藏·Editorial']
 const GROUP_COLOR = {
   '炸裂特效': '#C77DFF',
   '暗调电影感': '#5B8CFF',
-  '干净专业': '#FF6B5E',
-  '浅色清爽': '#7C8BF0',
-  '杂志素材': '#C5B299'
+  '歸藏·Swiss': '#FF6B5E',
+  '歸藏·Editorial': '#C5B299'
 }
 
 // Uniform preview box — every card gets the SAME slot; the fragment is

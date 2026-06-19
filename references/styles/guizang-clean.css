@@ -1,0 +1,205 @@
+/* ════════════════════════════════════════════════════════════════════════
+   guizang-clean.css — 歸藏家族 · 简洁排版 DNA 组件库（canonical source of truth）
+   ────────────────────────────────────────────────────────────────────────
+   这是「简洁排版类 · 歸藏家族」的纪律层，从 op7418/guizang-ppt-skill 的视觉
+   DNA 提炼、翻译成视频卡片用法。家族成员：
+     · Swiss 支柱（国际主义）  swiss · minimal · terminal
+     · Editorial 支柱（电子杂志） editorial-print · pastel-aura
+   读 guizang-dna.md 看「为什么」；这个文件是「长什么样」的权威定义。
+
+   ── 怎么用（重要）─────────────────────────────────────────────────────
+   视频卡片有硬性约束：每个 card fragment 的 <style> 规则必须以
+   `.card[data-card-id="<id>"]` 前缀作用域化（hyperframes lint 强制）。
+   所以这个文件是 **canonical 词典 / 抄写源**，不是运行时共享样式表：
+     1. 这里的类是「无作用域」的可读目录。
+     2. 5 个 clean fragment 在自己的 scoped <style> 里**嵌入一份作用域化副本**，
+        即把 `.kicker {…}` 写成 `.card[data-card-id="ref-swiss"] .kicker {…}`。
+     3. scripts/validate-clean-card.mjs 以本文件为准，校验 fragment 没有
+        发明本目录之外的组件类、没有内联自定义 hex、字重落在合规带。
+   这样既保留 fragment 自包含（standalone 预览 + playground iframe 照常工作），
+   又让全家族共享同一套纪律。改组件先改这里，再同步 5 个 fragment + 校验。
+
+   ── 铁律（这就是歸藏质感的来源）──────────────────────────────────────
+   A. 字号字重耦合（Swiss）：越大越细。≥120px→200/300；52–88px→300/400；
+      28–44px→400/450；20–26px→450；<20px→600/700（绝不 <500，太细读不清）。
+      **例外**：① 数字/KPI 永远重（700–800），不论多大；② minimal 风格故意
+      反向——巨字用 900，是它的身份。Editorial 支柱用 serif 承重（700–800 大标题）。
+   B. 配色只能从预设挑（见 guizang-dna.md 调色板表），禁止自定义 hex。
+      一卡一 accent / 一卡一墨调，永不混。对比度：IKB蓝/安全橙→白字；
+      柠檬黄/荧光绿→黑字。
+   C. 栅格对齐 + 模块化间距（下方 --sp-* token），不手搓魔数 padding。
+   D. 装饰克制：发丝线 / dot-matrix / 取景角，纯 CSS，无 canvas（clean 家族
+      刻意不配 WebGL 背景 / curve-motion）。
+
+   ── 尺寸基准 ──────────────────────────────────────────────────────────
+   所有 px 值是 landscape 1920×1080 基准（与其余 fragment 一致）。竖屏
+   (1080×1920) 按 card-contract 的表放大：标题 ×1.35、大数字 ×1.40、
+   meta ×1.25；或用 clamp(min, Ncqi, max) + container-type: inline-size。
+   ════════════════════════════════════════════════════════════════════════ */
+
+
+/* ━━━━━━━━━━━━━━━━ TOKENS（两支柱共享）━━━━━━━━━━━━━━━━ */
+/* 8px Carbon 基线间距 —— 用这些，不手搓 padding/gap */
+:root {
+  --sp-2: 4px;  --sp-3: 8px;   --sp-4: 12px;  --sp-5: 16px;
+  --sp-6: 24px; --sp-7: 32px;  --sp-8: 40px;  --sp-9: 48px;
+  --sp-10: 64px; --sp-11: 80px; --sp-12: 96px; --sp-13: 160px;
+
+  /* 字体栈 —— 仅 Inter 400/700 本地 bundle；其余靠系统回退（与 terminal/
+     editorial 既有做法一致）。要 guizang 极致细体保真，按 dna 文档可选
+     bundle Inter 200/300/800 + 一款 serif + 一款 mono 的 woff2。 */
+  --gz-sans:  "Inter", "Helvetica Neue", "Helvetica", "Arial", system-ui, "PingFang SC", sans-serif;
+  --gz-serif: ui-serif, "Songti SC", "Noto Serif SC", "Times New Roman", serif;
+  --gz-mono:  ui-monospace, "JetBrains Mono", "IBM Plex Mono", "SF Mono", Menlo, monospace;
+}
+
+
+/* ━━━━━━━━━━━━━━━━ PILLAR: SWISS（国际主义）━━━━━━━━━━━━━━━━ */
+/* 无衬线 · 单 accent · 灰阶 · 严格网格 · 越大越细。
+   token 默认值（fragment 可覆盖具体 hex，但只能取自预设表）：*/
+.pillar-swiss {
+  --paper: #fafaf8;   /* 暖白，永不纯 #fff */
+  --ink:   #0a0a0a;
+  --grey-1:#f0f0ee; --grey-2:#d4d4d2; --grey-3:#737373;
+  --text-2:#525252;  --text-3:#737373;  --hair:#e0e0e0;  --hair-strong:#a3a3a3;
+  --accent:#002FA7;   /* 默认 IKB；可换 lemon/lime/safety/swiss-red */
+  --accent-on:#ffffff;
+  font-family: var(--gz-sans);
+  color: var(--ink);
+}
+/* Swiss 字阶（越大越细；数字例外见 .stat-nb / .kpi） */
+.pillar-swiss .h-hero { font: 200 132px/0.96 var(--gz-sans); letter-spacing:-.02em; }
+.pillar-swiss .h-xl   { font: 250 88px/1.0  var(--gz-sans); letter-spacing:-.02em; }
+.pillar-swiss .h-md   { font: 400 52px/1.08 var(--gz-sans); letter-spacing:-.01em; }
+.pillar-swiss .h-sub  { font: 400 36px/1.2  var(--gz-sans); opacity:.72; }
+.pillar-swiss .lead   { font: 400 30px/1.45 var(--gz-sans); }
+.pillar-swiss .body   { font: 450 26px/1.55 var(--gz-sans); }
+.pillar-swiss .body-sm{ font: 450 22px/1.5  var(--gz-sans); }
+
+
+/* ━━━━━━━━━━━━━━━━ PILLAR: EDITORIAL（电子杂志）━━━━━━━━━━━━━━━━ */
+/* serif 承重 · 暖墨五色 · 图为主角 · serif=层级，sans=信息密度。 */
+.pillar-editorial {
+  --paper: #f1efea;   /* 默认 ink 墨调；可换 indigo/forest/kraft/dune */
+  --ink:   #0a0a0b;
+  --grey-1:#e8e5de; --grey-2:#d8d4ca; --grey-3:#908b7e;
+  --text-2:rgba(10,10,11,.72); --text-3:rgba(10,10,11,.55); --hair:rgba(127,127,127,.3);
+  --accent:#0a0a0b;   /* editorial 的 accent 通常就是墨色本身 */
+  --accent-on:#f1efea;
+  font-family: var(--gz-sans);
+  color: var(--ink);
+}
+/* Editorial 字阶（serif 大标题承重，sans 正文） */
+.pillar-editorial .display { font: 800 132px/0.92 var(--gz-serif); letter-spacing:-.03em; }
+.pillar-editorial .h1      { font: 700 92px/0.96  var(--gz-serif); letter-spacing:-.02em; }
+.pillar-editorial .h2      { font: 600 56px/1.05  var(--gz-serif); }
+.pillar-editorial .h3      { font: 500 34px/1.2   var(--gz-serif); }
+.pillar-editorial .lead    { font: 400 30px/1.5   var(--gz-serif); }
+.pillar-editorial .body    { font: 400 26px/1.7   var(--gz-sans); }
+.pillar-editorial .body-sm { font: 400 22px/1.6   var(--gz-sans); }
+.pillar-editorial .big-num { font: 800 120px/0.9  var(--gz-serif); letter-spacing:-.03em; }
+
+
+/* ━━━━━━━━━━━━━━━━ 组件（pillar 无关，靠 var 主题化）━━━━━━━━━━━━━━━━ */
+
+/* kicker —— mono 大写小标签，节奏装饰 */
+.kicker {
+  font: 600 18px/1 var(--gz-mono);
+  letter-spacing: .26em; text-transform: uppercase;
+  color: var(--ink);
+}
+/* meta —— 更小的 mono 标签 / 页脚 / 时间码 */
+.meta {
+  font: 500 16px/1 var(--gz-mono);
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* stat-card —— 数据矩阵单元：顶线 + mono 标签 + 大数字 + 单位 + 注 */
+.stat-card { display:flex; flex-direction:column; gap:var(--sp-3);
+  align-items:flex-start; padding-top:var(--sp-5); border-top:2px solid var(--ink); }
+.stat-card.thin   { border-top-width:1px; border-top-color:var(--hair); }
+.stat-card.accent-top { border-top-color:var(--accent); border-top-width:3px; }
+.stat-label { font:600 16px/1 var(--gz-mono); letter-spacing:.22em;
+  text-transform:uppercase; color:var(--text-3); }
+.stat-nb { font:800 96px/0.88 var(--gz-sans); letter-spacing:-.035em;
+  font-feature-settings:"tnum"; }          /* 数字永远重——不受越大越细约束 */
+.stat-unit { font:500 .38em/1 var(--gz-sans); opacity:.72; margin-left:.1em; }
+.stat-note { font:400 24px/1.5 var(--gz-sans); color:var(--text-2); margin-top:var(--sp-2); }
+
+/* callout —— 引语 / 拉框：左 accent 边 + 大引文 + 出处 */
+.callout { padding:var(--sp-6) var(--sp-7); border-left:3px solid var(--accent); }
+.callout .q-big { font:600 44px/1.42 var(--gz-serif); }
+.callout .cite  { display:block; margin-top:var(--sp-5);
+  font:500 16px/1 var(--gz-mono); letter-spacing:.2em; text-transform:uppercase; color:var(--text-3); }
+
+/* pipeline / step —— 多步流程：顶线分段，斜体序号 + 标题 + 描述 */
+.pipeline { display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:var(--sp-6); }
+.pipeline.cols-3 { grid-template-columns:repeat(3,1fr); }
+.pipeline.cols-4 { grid-template-columns:repeat(4,1fr); }
+.step { display:flex; flex-direction:column; gap:var(--sp-3);
+  padding-top:var(--sp-4); border-top:1px solid var(--hair-strong); }
+.step-nb    { font:italic 500 28px/1 var(--gz-serif); opacity:.45; }
+.step-title { font:700 30px/1.2 var(--gz-sans); }
+.step-desc  { font:400 22px/1.45 var(--gz-sans); color:var(--text-2); }
+
+/* timeline-v —— 纵向时间轴：虚线轴 + 节点圆点 + 年份/主值/描述 */
+.timeline-v { position:relative; }
+.timeline-v::before { content:""; position:absolute; left:11px; top:var(--sp-5);
+  bottom:var(--sp-5); width:1px;
+  background:repeating-linear-gradient(to bottom, currentColor 0 4px, transparent 4px 8px);
+  opacity:.35; }
+.tl-node { position:relative; display:grid;
+  grid-template-columns:24px minmax(0,7em) 1fr; gap:0 var(--sp-5);
+  align-items:center; padding:var(--sp-7) 0; }
+.tl-node .dot { width:10px; height:10px; border-radius:50%; background:currentColor;
+  justify-self:center; z-index:1; }
+.tl-node.accent .dot { background:var(--accent); }
+.tl-node .yr   { font:500 22px/1 var(--gz-mono); }
+.tl-node .multi{ font:200 clamp(28px,2.8vw,56px)/0.95 var(--gz-sans); }
+.tl-node .desc { font:400 24px/1.55 var(--gz-sans); color:var(--text-2); }
+
+/* bar-chart —— 横向条形：mono 标签 + 轨道 + accent 填充 + 重数字值 */
+.bar-chart { display:flex; flex-direction:column; gap:var(--sp-5); }
+.bar-row { display:grid; grid-template-columns:8em 1fr 4em; gap:var(--sp-6); align-items:center; }
+.bar-label { font:500 18px/1 var(--gz-mono); letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text-2); }
+.bar-track { height:14px; background:rgba(127,127,127,.18); position:relative; }
+.bar-fill  { height:100%; background:var(--accent); position:absolute; left:0; top:0; }
+.bar-value { font:700 26px/1 var(--gz-sans); text-align:right; font-feature-settings:"tnum"; }
+
+/* mark / underline —— 行内高亮 */
+.mark { background:var(--accent); color:var(--accent-on); padding:0 .2em;
+  box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.mark.ink { background:var(--ink); color:var(--paper); }
+.underline-accent { background-image:linear-gradient(to bottom, transparent 70%,
+  var(--accent) 70%, var(--accent) 94%, transparent 94%); padding:0 .05em; }
+
+/* 实色块 —— 高对比呼喊 */
+.accent-block { background:var(--accent); color:var(--accent-on); padding:var(--sp-6) var(--sp-6); }
+.accent-block.tight { padding:var(--sp-4) var(--sp-5); }
+.ink-block { background:var(--ink); color:var(--paper); padding:var(--sp-6) var(--sp-6); }
+.grey-block { background:var(--grey-1); padding:var(--sp-6) var(--sp-6); }
+
+/* 栅格原语 —— 12 列 + 常用 2/3 栏 */
+.grid-12 { display:grid; grid-template-columns:repeat(12,1fr); gap:var(--sp-6) var(--sp-5);
+  align-items:start; }
+.span-2{grid-column:span 2}.span-3{grid-column:span 3}.span-4{grid-column:span 4}
+.span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-7{grid-column:span 7}
+.span-8{grid-column:span 8}.span-9{grid-column:span 9}.span-12{grid-column:span 12}
+.grid-2-7-5 { display:grid; grid-template-columns:7fr 5fr; gap:var(--sp-7) var(--sp-9); align-items:start; }
+.grid-2-6-6 { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-7) var(--sp-9); align-items:start; }
+.grid-2-8-4 { display:grid; grid-template-columns:8fr 4fr; gap:var(--sp-7) var(--sp-9); align-items:start; }
+.grid-3     { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-7); }
+
+/* 分隔线 / 装饰 —— 纯 CSS，发丝级 */
+.rule   { width:100%; height:1px; background:currentColor; opacity:.25; }
+.rule.strong { height:2px; opacity:.9; }
+.rule.v { width:1px; height:100%; }
+.tag    { display:inline-block; padding:6px 14px; border:1px solid currentColor;
+  font:500 16px/1 var(--gz-mono); letter-spacing:.16em; text-transform:uppercase; opacity:.85; }
+/* dot-matrix —— 替代 guizang 的 WebFGL 点阵，纯 CSS 氛围底（克制） */
+.dots      { background-image:radial-gradient(currentColor 1px, transparent 1px);
+  background-size:14px 14px; opacity:.16; }
+.dots.fine { background-size:8px 8px; opacity:.12; }
+.dots.bold { background-size:20px 20px; opacity:.22; }

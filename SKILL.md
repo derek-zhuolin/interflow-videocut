@@ -38,6 +38,7 @@ from the library, don't reinvent.
 | `references/composition-shell.html` | the STATIC composition scaffold you `cp` and fill (do NOT retype it) | Step 9 |
 | `references/editorial-print-montage.md` | the multi-asset montage kit for the `editorial-print` style (5 layout primitives, 3 transitions, asset staging, woven vs standalone modes) | when style = editorial-print |
 | `references/styles/*.html` | self-contained style fragments — **clone these**; includes the 炸裂族 (neon-grid-hud / liquid-aurora / holo-iridescent + playground-gallery DNA) | Step 7 / 8 |
+| `references/styles/guizang-dna.md` (+ `guizang-clean.css` 组件 + `guizang-checklist.md` 质检) | **简洁排版类·歸藏家族**的 DNA 纪律层（两支柱、字号字重耦合、预设调色板、组件库）。统管 swiss / minimal / terminal / editorial-print / pastel-aura | 选了 clean 家族任一款时（Step 7/8）|
 | `references/layouts/*.html` | layout skeletons (videoBounds + cardBounds, landscape/portrait); neon-grid-hud carries its own window-scene | Step 7 / 9 |
 | `references/frames/*.html` | 3 frame chrome fragments (clean / hairline / polaroid) | Step 9 |
 | `references/curve-motion/README.md` | **可选视觉增强** — 数学曲线母题：背景氛围底 + textPath 排字 / clip-path 裁图剪影 / 采样点布点 + 沿曲线丝滑入场漂移（`curveIn`/`curveBob`）。全闭式 `draw(t)`、确定性 seek 安全；配暗底风格（nebula-glass/glass/spatial/geom），不叠 glass-hud/swiss/minimal | Step 7 / 8 / 9（想加高级动态质感时） |
@@ -290,6 +291,20 @@ Authoring a fragment from a blank file is the **exception**. Animations are
 **declared, not coded** — use `data-anim-*` attributes only; never write
 `<script>` in a card. The composition `index.html` is the only place a
 `<script>` (the GSAP block) lives.
+
+**简洁排版类·歸藏家族 cards** (swiss / minimal / terminal / editorial-print /
+pastel-aura): before composing, read
+[`references/styles/guizang-dna.md`](references/styles/guizang-dna.md) — these
+share one DNA (字号字重耦合 + 预设调色板 + 组件库 `guizang-clean.css`)。配色只能取
+预设表（禁自定义 hex，accent 经 `--accent`），组件用 `.stat-card`/`.callout`/
+`.pipeline`/`.timeline-v`/`.bar-chart`/`.kicker`/`.meta`/`.mark`，一片一支柱永不混。
+写完每张 clean 卡跑一遍校验：
+
+```bash
+node "$SKILL_DIR/scripts/validate-clean-card.mjs" "$WORK_DIR/public/cards/<card-id>.html"
+```
+
+应 PASS（无 hard fail）；交付前对照 [`guizang-checklist.md`](references/styles/guizang-checklist.md) 过 P0。
 
 **→ The complete Step 8 — the card HTML contract + hard rules (lint), the
 canvas-atmosphere exception, NON-NEGOTIABLE overflow safety, portrait

@@ -1,17 +1,22 @@
 <!--
-  Style: swiss — pure white · Helvetica · strict double rules · red accent slab
+  Style: swiss — 瑞士国际主义 · 暖白 · 严格 12 列网格 · 单 accent · 越大越细
   ─────────────────────────────────────────────────────────────────────
-  Tokens
-    bg     #ffffff
-    ink    #111111
-    muted  #555555
-    accent #e8190f   (signal red — slab + number)
-  Fonts
-    headline & body — Helvetica / Inter / system sans
+  歸藏家族 · Swiss 支柱（host class .pillar-swiss）。读 guizang-dna.md。
+  身份：信息驱动、克制、权威。靠「字号字重耦合（越大越细）+ 模块化网格 +
+  单一 accent 色块 + stat-card 数据纪律」撑起 Massimo Vignelli 式的瑞士质感。
+
+  Tokens（取自预设表，禁自定义 hex；一卡一 accent 永不混）
+    paper  #fafaf8   暖白（永不纯 #fff）
+    ink    #0a0a0a
+    grey   f0f0ee / d4d4d2 / 737373
+    accent #002FA7   IKB 国际克莱因蓝（默认）+ 白字
+      └ 备选：lemon #FFD500/黑 · lime #C5E803/黑 · safety #FF6B35/白 · swiss-red #e8190f/白
+  字阶耦合：巨标题 200（细）· 段标题 400 · 小字/meta 600（重）· 数字永远 800
+  Components（来自 guizang-clean.css，scoped 嵌入）
+    .kicker .meta .stat-card .mark .accent-block .rule
   Best with
-    layouts: split, stack, overlay
-    frames:  clean, hairline
-    content: 严肃陈述 / 排版主导 / 文化机构 / 极简数据
+    layouts: split, stack, overlay   frames: hairline, clean
+    content: 财报 / 数据 / 方法论拆解 / 枚举清单 / 权威陈述
 -->
 <!doctype html>
 <html lang="zh-CN">
@@ -31,83 +36,101 @@
 
 <div class="card" data-card-id="ref-swiss">
   <style>
+    /* ── pillar tokens (preset palette only) ── */
     .card[data-card-id="ref-swiss"] { width: 100%; height: 100%; }
     .card[data-card-id="ref-swiss"] .root {
-      --bg: #ffffff; --ink: #111111; --muted: #555555; --accent: #e8190f;
-      --font-sans: "Helvetica Neue", Helvetica, "Inter", ui-sans-serif, system-ui, sans-serif;
-      --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+      --paper: #fafaf8; --ink: #0a0a0a;
+      --grey-1: #f0f0ee; --grey-2: #d4d4d2; --grey-3: #737373;
+      --text-2: #525252; --text-3: #737373; --hair: #e0e0e0; --hair-strong: #a3a3a3;
+      --accent: #002FA7; --accent-on: #ffffff;
+      --gz-sans: "Inter", "Helvetica Neue", "Helvetica", "Arial", system-ui, "PingFang SC", sans-serif;
+      --gz-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+      --sp-3: 8px; --sp-5: 16px; --sp-6: 24px; --sp-7: 32px; --sp-9: 48px;
 
       width: 100%; height: 100%; position: relative; overflow: hidden;
-      background: var(--bg); color: var(--ink); font-family: var(--font-sans);
-      padding: 48px 64px; box-sizing: border-box;
-      display: grid; grid-template-rows: auto 1fr auto; gap: 24px;
+      box-sizing: border-box; container-type: inline-size;
+      background: var(--paper); color: var(--ink); font-family: var(--gz-sans);
+      padding: 64px 72px;
+      display: grid; grid-template-rows: auto 1fr auto; gap: 40px;
     }
+    /* top chrome — strong rule + mono meta (small = heavy) */
     .card[data-card-id="ref-swiss"] .top-rule { height: 4px; background: var(--ink); }
-    .card[data-card-id="ref-swiss"] .top-meta {
-      display: flex; justify-content: space-between; align-items: baseline;
-      padding-top: 12px;
-      font: 700 14px/1 var(--font-mono); letter-spacing: .26em; color: var(--ink);
-      text-transform: uppercase;
-    }
-    .card[data-card-id="ref-swiss"] .top-meta .num { color: var(--accent); }
-    .card[data-card-id="ref-swiss"] .body {
-      display: grid; grid-template-columns: 1fr 320px; gap: 56px; align-items: end;
-    }
-    .card[data-card-id="ref-swiss"] .title {
-      margin: 0;
-      font: 700 116px/0.95 var(--font-sans);
-      color: var(--ink); letter-spacing: -.025em;
-    }
-    .card[data-card-id="ref-swiss"] .title .red { color: var(--accent); }
-    .card[data-card-id="ref-swiss"] .detail {
-      margin: 0; font: 400 24px/1.45 var(--font-sans); color: var(--muted);
-    }
-    .card[data-card-id="ref-swiss"] .slab {
-      background: var(--accent); color: #fff;
-      padding: 24px 28px;
-      font: 700 56px/1 var(--font-sans); letter-spacing: -.02em;
-      align-self: end;
-    }
-    .card[data-card-id="ref-swiss"] .slab small {
-      display: block; font: 600 14px/1 var(--font-mono); letter-spacing: .18em;
-      margin-top: 6px; color: rgba(255,255,255,.85);
-    }
-    .card[data-card-id="ref-swiss"] .bottom-rule {
-      height: 1px; background: var(--ink);
-    }
-    .card[data-card-id="ref-swiss"] .bottom-meta {
-      display: flex; justify-content: space-between; align-items: baseline;
-      padding-top: 12px;
-      font: 600 13px/1 var(--font-mono); letter-spacing: .22em; color: var(--muted);
-    }
+    .card[data-card-id="ref-swiss"] .row {
+      display: flex; justify-content: space-between; align-items: baseline; }
+    .card[data-card-id="ref-swiss"] .kicker {
+      font: 600 18px/1 var(--gz-mono); letter-spacing: .26em;
+      text-transform: uppercase; color: var(--ink); }
+    .card[data-card-id="ref-swiss"] .meta {
+      font: 500 16px/1 var(--gz-mono); letter-spacing: .18em;
+      text-transform: uppercase; color: var(--text-3); }
+    .card[data-card-id="ref-swiss"] .meta .num { color: var(--accent); }
+    /* headline — 越大越细 (200) + one accent .mark */
+    .card[data-card-id="ref-swiss"] .body { display: flex; flex-direction: column;
+      justify-content: center; gap: 28px; min-height: 0; }
+    .card[data-card-id="ref-swiss"] .h-hero {
+      margin: 0; font: 200 clamp(72px, 11cqi, 120px)/0.98 var(--gz-sans);
+      letter-spacing: -.025em; max-width: 94%; overflow-wrap: anywhere; text-wrap: balance; }
+    .card[data-card-id="ref-swiss"] .mark {
+      background: var(--accent); color: var(--accent-on); padding: 0 .14em;
+      box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+    .card[data-card-id="ref-swiss"] .lead {
+      margin: 0; font: 400 28px/1.5 var(--gz-sans); color: var(--text-2);
+      max-width: 76%; overflow-wrap: anywhere; }
+    /* stat-card row — data discipline; numbers always heavy (800) */
+    .card[data-card-id="ref-swiss"] .stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+    .card[data-card-id="ref-swiss"] .stat-card {
+      display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+      padding-top: var(--sp-5); border-top: 3px solid var(--accent); }
+    .card[data-card-id="ref-swiss"] .stat-card.thin { border-top: 1px solid var(--hair-strong); }
+    .card[data-card-id="ref-swiss"] .stat-label {
+      font: 600 15px/1 var(--gz-mono); letter-spacing: .2em;
+      text-transform: uppercase; color: var(--text-3); }
+    .card[data-card-id="ref-swiss"] .stat-nb {
+      font: 800 76px/0.9 var(--gz-sans); letter-spacing: -.04em; font-feature-settings: "tnum"; }
+    .card[data-card-id="ref-swiss"] .stat-nb .stat-unit {
+      font: 500 .34em/1 var(--gz-sans); opacity: .72; margin-left: .08em; }
+    /* bottom chrome */
+    .card[data-card-id="ref-swiss"] .bottom-rule { height: 1px; background: var(--ink); opacity: .25; }
   </style>
 
-  <div class="root">
+  <div class="root pillar-swiss">
     <div>
       <div class="top-rule" data-anim="grow-x" data-anim-at="0.05" data-anim-duration="0.45"
-           data-anim-target-w="1792"></div>
-      <div class="top-meta" data-anim="fade-in" data-anim-at="0.3" data-anim-duration="0.35">
-        <span>TAKEAWAY / 007</span>
-        <span class="num">№ 09</span>
+           data-anim-target-w="1776"></div>
+      <div class="row" data-anim="fade-in" data-anim-at="0.3" data-anim-duration="0.35"
+           style="padding-top:14px;">
+        <span class="kicker">TAKEAWAY / 结构</span>
+        <span class="meta">№ <span class="num">09</span> · 00:42 → 01:14</span>
       </div>
     </div>
 
     <div class="body">
-      <h2 class="title" data-anim="fade-in" data-anim-at="0.45" data-anim-duration="0.55">
-        <span class="red">设计</span>不是装饰，<br/>而是结构。
+      <h2 class="h-hero" data-anim="settle" data-anim-at="0.45" data-anim-duration="0.6"
+          data-anim-distance="22">
+        设计不是装饰，<br/>而是<span class="mark">结构</span>。
       </h2>
-      <div class="slab" data-anim="slide-in" data-anim-at="0.55" data-anim-duration="0.45"
-           data-anim-from="right" data-anim-distance="120">
-        92<small>STRUCTURE INDEX</small>
-      </div>
+      <p class="lead" data-anim="settle" data-anim-at="0.7" data-anim-duration="0.5">
+        把信息排进网格、让字阶承担层级——形式退场，内容自己说话。
+      </p>
     </div>
 
     <div>
-      <div class="bottom-rule"></div>
-      <div class="bottom-meta">
-        <span>RATIO 1 : 1.618</span>
-        <span>00:42 → 01:14</span>
+      <div class="stats">
+        <div class="stat-card" data-anim="settle" data-anim-at="0.9" data-anim-duration="0.45">
+          <span class="stat-label">Structure Index</span>
+          <span class="stat-nb">92</span>
+        </div>
+        <div class="stat-card thin" data-anim="settle" data-anim-at="1.0" data-anim-duration="0.45">
+          <span class="stat-label">Grid Columns</span>
+          <span class="stat-nb">12</span>
+        </div>
+        <div class="stat-card thin" data-anim="settle" data-anim-at="1.1" data-anim-duration="0.45">
+          <span class="stat-label">Ratio</span>
+          <span class="stat-nb">1.618<span class="stat-unit">φ</span></span>
+        </div>
       </div>
+      <div class="bottom-rule" style="margin-top:32px;"></div>
     </div>
   </div>
 </div>

@@ -266,11 +266,13 @@ After the user answers (any channel):
    `"styleKey": "<sibling-key>"`，Step 8 就 `cp` 那一款而不是主风格。
    - **颜色天然一致**：所有 fragment 都用 `var(--accent-N)` 上色，姊妹风格会自动继承
      当前 theme 调色板，不会撞色——这是这一步安全的根本原因。
-   - **只在同一家族内挑姊妹**（沿用 skill 已有的家族划分：**炸裂族**
+   - **只在同一家族内挑姊妹**（沿用 skill 的家族划分：**炸裂族**
      neon-grid-hud / liquid-aurora / holo-iridescent / cinematic-bloom /
-     kinetic-megatype / depth-parallax；**cinematic** geom / glass / glass-hud /
-     spatial / nebula-glass；**clinical** swiss / minimal / terminal；外加
-     pastel-aura、editorial-print 各自成系，详见 `DESIGN_INDEX.md` 与 frame 矩阵）。
+     kinetic-megatype / depth-parallax；**暗调电影感** geom / glass / glass-hud /
+     spatial / nebula-glass；**歸藏·Swiss** swiss / minimal / terminal；
+     **歸藏·Editorial** editorial-print / pastel-aura，详见 `DESIGN_INDEX.md`
+     的两大家族划分 + `styles/guizang-dna.md` 的两根支柱）。歸藏家族内换姊妹要
+     **同支柱**（Swiss 内 swiss↔minimal、Editorial 内 editorial↔pastel），别跨支柱。
      跨家族混（极简卡接霓虹卡）即使同色也会结构打架——别这么干。
    - **克制**：全片最多 2–3 款，主风格仍占大多数卡。姊妹是「重音」，不是「换台」。
      拿不准就别加——`styleKey` 缺省 = 主风格，这是安全默认。
@@ -402,6 +404,39 @@ Pick from these `themeId` palettes (use them as `--accent-N` /
 | craft | `#bf5700 #d62728 #6c757d #e9b54a #3d5a80` | `#f6efe1` | `#2d2d2d` |
 | slate | `#0ea5e9 #ef4444 #22c55e #f97316 #a855f7` | `#1e293b` | `#f1f5f9` |
 | mono | `#000 #555 #888 #aaa #ccc` | `#fff` | `#000` |
+
+### 歸藏家族预设调色板（简洁排版类 clean 卡片专用 · 禁自定义 hex）
+
+`themeId` 是**整片页底/边框 chrome** 的调色板。**简洁排版类·歸藏家族**
+（swiss / minimal / terminal / editorial-print / pastel-aura）的卡片 accent **另有
+一套预设**，写在卡片 `.root` 的 `--accent`（一卡一色，永不混），不从 themeId
+的 `--accent-N` 取。完整规范见 [styles/guizang-dna.md](styles/guizang-dna.md)，
+组件定义见 [styles/guizang-clean.css](styles/guizang-clean.css)。速查：
+
+**Swiss 支柱**（共享暖白灰阶 `--paper:#fafaf8 --ink:#0a0a0a`，4 选 1 accent）
+
+| accent key | hex | 文字色 |
+|---|---|---|
+| `ikb`（默认） | `#002FA7` | 白 |
+| `lemon` | `#FFD500` | **黑**（黄底必须黑字）|
+| `lime` | `#C5E803` | **黑** |
+| `safety` | `#FF6B35` | 白（weight ≥600）|
+| `swiss-red` | `#e8190f` | 白 |
+
+**Editorial 支柱**（5 套墨/纸成对，一卡一套）
+
+| ink key | 墨 ink | 纸 paper |
+|---|---|---|
+| `ink`（默认） | `#0a0a0b` | `#f1efea` |
+| `indigo` | `#0a1f3d` | `#f1f3f5` |
+| `forest` | `#1a2e1f` | `#f5f1e8` |
+| `kraft` | `#2a1e13` | `#eedfc7` |
+| `dune` | `#1f1a14` | `#f0e6d2` |
+
+> `terminal` accent = phosphor `#4ade80`；`minimal` accent = 纯黑 `#0a0a0a`；
+> `pastel-aura`（Editorial sans 日间变体）accent = periwinkle `#5e6ad2`。
+> 选中 clean 家族任一款时：先读 `styles/guizang-dna.md`，写完卡片跑
+> `node scripts/validate-clean-card.mjs` 自检（配色锁定 / 字重耦合 / 无 canvas）。
 
 Available fonts (woff2 in `<SKILL_DIR>/assets/fonts/`, staged to work dir in Step 9): `Caveat` (handwriting),
 `LXGW WenKai TC` (Chinese hand-script), `Inter` (modern sans), `Virgil`

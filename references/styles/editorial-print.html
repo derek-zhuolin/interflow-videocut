@@ -2,6 +2,10 @@
   Style: editorial-print — clean off-white paper · ink hairlines · hard offset
                            shadow · restrained ghost serif · grain
   ─────────────────────────────────────────────────────────────────────
+  歸藏家族 · Editorial 支柱（host class .pillar-editorial）。读 guizang-dna.md。
+  这是 Editorial 支柱「图为主角」的一极：serif 承重标题 + mono kicker + 暖墨纸。
+  配色取 Editorial 5 套墨调预设（默认 ink；可换 indigo / forest / kraft / dune）——
+  改 .root 的 --paper/--ink 一对即可，永不混。
   The "press / magazine spread" look. UNLIKE the other 13 styles (which are
   single text-takeaway cards), editorial-print is an ASSET-DRIVEN scene: the
   images / video clips ARE the content, arranged like a printed spread. Use it
@@ -58,9 +62,12 @@
   <style>
     .card[data-card-id="ref-editorial-print"] { height: 100%; }
     .card[data-card-id="ref-editorial-print"] .root {
-      --paper: #F4F3EE; --ink: #1A1815; --black: #000; --stone: #908B7E; --white: #FFF;
-      --font-head: ui-serif, "Songti SC", "Times New Roman", serif;
+      /* Editorial preset · ink theme (swap the pair for indigo/forest/kraft/dune) */
+      --paper: #f1efea; --ink: #0a0a0b; --black: #000; --stone: #908B7E; --white: #FFF;
+      --accent: #0a0a0b; --accent-on: #f1efea;
+      --font-head: ui-serif, "Songti SC", "Noto Serif SC", "Times New Roman", serif;
       --font-ui: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      --gz-mono: ui-monospace, "IBM Plex Mono", "JetBrains Mono", "SF Mono", Menlo, monospace;
 
       width: 100%; height: 100%; position: relative; overflow: hidden;
       box-sizing: border-box;
@@ -97,8 +104,9 @@
       display: flex; align-items: center; justify-content: center;
       font-family: var(--font-ui); font-size: 34px; font-weight: 800; letter-spacing: -0.04em;
     }
+    /* kicker — mono uppercase, the Editorial-pillar rhythm label (guizang Style A) */
     .card[data-card-id="ref-editorial-print"] .label {
-      font-family: var(--font-ui); font-size: 19px; font-weight: 700;
+      font-family: var(--gz-mono); font-size: 18px; font-weight: 600;
       letter-spacing: 0.22em; text-transform: uppercase; color: var(--stone);
     }
     .card[data-card-id="ref-editorial-print"] .headline {
@@ -153,7 +161,7 @@
     .card[data-card-id="ref-editorial-print"] .slot::after  { width: 64px; height: 1px; }
   </style>
 
-  <div class="root">
+  <div class="root pillar-editorial">
     <div class="grain"></div>
     <div class="ghost" data-anim="drift" data-anim-axis="x" data-anim-amp="12" data-anim-period="12">WORK</div>
 

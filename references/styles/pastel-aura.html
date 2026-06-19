@@ -1,6 +1,9 @@
 <!--
   Style: pastel-aura (柔和极光) — ivory ground · COOL aura gradients · modern sans · floating white card
   ─────────────────────────────────────────────────────────────────────
+  歸藏家族 · Editorial 支柱的「sans 日间变体」（host class .pillar-editorial）。
+  读 guizang-dna.md。它不走 serif 墨调（Derek 2026-06 已去衬线/去暖色），保留
+  象牙底 + 冷 aurora + periwinkle accent 的明亮编辑语气，是支柱里唯一的白天锚点。
   系统的「日间 / 浅色锚点」（亮视频自动匹配）：必须 LIGHT & airy。
   象牙近白底 + 冷调极光雾团（薄荷 / 薰衣草 / 长春花蓝 / 冷青）+ 现代无衬线强字阶
   + 悬浮白卡柔投影。区别于 glass / nebula-glass（暗底磨砂玻璃）：这是高级
@@ -58,9 +61,10 @@
   <style>
     .card[data-card-id="ref-pastel-aura"] .root {
       --ink: #1E2435; --ink-soft: #6B7184; --ink-faint: rgba(30,36,53,.34);
-      --accent: #5E6AD2; --accent-cy: #5BB5C9;
+      --accent: #5E6AD2; --accent-on: #FAF8F4; --accent-cy: #5BB5C9;
       --mint: #D6EDDD; --lavender: #DCD3F2; --periwink: #D6DEF8; --cyan: #D2ECF0;
       --font-sans: 'Inter', ui-sans-serif, system-ui, "PingFang SC", "Hiragino Sans GB", sans-serif;
+      --gz-mono: ui-monospace, "IBM Plex Mono", "JetBrains Mono", "SF Mono", Menlo, monospace;
       width: 100%; height: 100%; position: relative; overflow: hidden; box-sizing: border-box;
       /* 冷调极光底（薄荷 / 薰衣草 / 长春花蓝），近白象牙打底 */
       background:
@@ -100,9 +104,10 @@
       border-radius: 5px;
     }
     /* 顶部 meta 行 */
+    /* topmeta — mono rhythm label (the one editorial nod in this soft variant) */
     .card[data-card-id="ref-pastel-aura"] .topmeta {
       display: flex; justify-content: space-between; align-items: center;
-      font: 600 19px/1 var(--font-sans); letter-spacing: .30em; text-transform: uppercase;
+      font: 500 17px/1 var(--gz-mono); letter-spacing: .26em; text-transform: uppercase;
       color: var(--ink-faint);
     }
     .card[data-card-id="ref-pastel-aura"] .topmeta .rec {
@@ -182,7 +187,7 @@
     .card[data-card-id="ref-pastel-aura"] .meta .hl { color: var(--ink); font-weight: 700; }
   </style>
 
-  <div class="root">
+  <div class="root pillar-editorial">
     <div class="pane">
       <div class="topmeta">
         <span data-anim="fade-in" data-anim-at="0.12" data-anim-duration="0.5">INTERFLOW · PASTEL</span>
